@@ -1,56 +1,31 @@
-# 📑 API Collections & Testing Tools Guide
+# 📑 Postman v2.1.0 API Collection Exporter
 
-Every time you build or scaffold endpoints in Padi Rust Framework, the endpoints adhere to standard REST conventions with deterministic URLs and payloads.
-
----
-
-## 📋 Table of Contents
-
-- [📑 API Collections & Testing Tools Guide](#api-collections--testing-tools-guide)
-- [📦 Standard CRUD Endpoints](#standard-crud-endpoints)
-- [🚀 Postman & Thunder Client Configuration](#postman--thunder-client-configuration)
-- [🎯 Direct URL Standard](#direct-url-standard)
+**PadiBase Studio** can export your entire backend API specification or individual table collections into standard **Postman Collection v2.1.0** JSON files—ready to import into **Postman, Insomnia, Thunder Client, Bruno, or VS Code REST Client**.
 
 ---
 
-## 📦 Standard CRUD Endpoints
+## 1. Export via CLI
 
-All resources generated or developed in Padi Rust provide the following standard endpoints:
+```bash
+# Export full system collection + individual table collections to ./api_collection
+cargo run -- api-collection --force
 
-| Action | Method | URL Path | Query Parameters | Description |
-| :--- | :---: | :--- | :--- | :--- |
-| **List (Paginated)** | `GET` | `/<resource>` | `?page=1&per_page=15` | Retrieves paginated entities with metadata |
-| **List All** | `GET` | `/<resource>/all` | - | Retrieves all entities without pagination |
-| **Show** | `GET` | `/<resource>/{id}` | - | Retrieves a single entity by ID |
-| **Create** | `POST` | `/<resource>` | - | Creates a new record |
-| **Update** | `PUT` | `/<resource>/{id}` | - | Updates an existing record |
-| **Delete** | `DELETE` | `/<resource>/{id}` | - | Deletes a record |
+# Export a specific table only (e.g. users)
+cargo run -- api-collection --collection users --force
 
----
-
-## 🚀 Postman & Thunder Client Configuration
-
-### 1. Environment Variables Setup
-Create an environment in Postman or Thunder Client with:
-- `base_url`: `http://127.0.0.1:8080`
-- `token`: `<YOUR_JWT_TOKEN>`
-
-### 2. Header Presets
-Set standard HTTP headers:
-- `Content-Type`: `application/json`
-- `Authorization`: `Bearer {{token}}`
-
----
-
-## 🎯 Direct URL Standard
-
-Padi Rust endpoints use clean, direct root paths:
-
-```http
-GET {{base_url}}/products?page=1&per_page=10
-GET {{base_url}}/products/all
-GET {{base_url}}/products/1
-POST {{base_url}}/products
-PUT {{base_url}}/products/1
-DELETE {{base_url}}/products/1
+# Custom output directory & base URL
+cargo run -- api-collection --output ./my_collections --base-url "http://127.0.0.1:8085"
 ```
+
+Generated files:
+- `padi_base_api_collection.json`: Master collection containing Admin Gateway, Schema Management, Auth, Backups, Realtime, and folders for every table.
+- `<collection>_collection.json`: Modular collection per table (`list`, `all`, `create`, `view`, `update`, `delete`, batch operations, and auto-saved JWT tokens).
+
+---
+
+## 2. 1-Click Download in PadiBase Studio UI (`/_padibase/`)
+
+Download collections directly from your browser:
+- `GET /api/api-collection?download=true` (Full System Collection)
+- `GET /api/collections/:collection/api-collection?download=true` (Single Table Collection)
+- Or click the **Export API Collection** button inside the Studio table header or **API Endpoints & Rules** modal.

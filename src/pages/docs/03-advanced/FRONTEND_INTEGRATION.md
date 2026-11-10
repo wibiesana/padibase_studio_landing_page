@@ -1,206 +1,78 @@
-# 🖥️ Frontend Integration Guide
+# 📱 Frontend Integration & Official JS/TS SDK (`padibase`)
 
-## 🔌 Seamless Integration with Modern Client Apps
-
-Padi Rust Api Framework produces a clean, consistent response contract designed for effortless consumption in **Vue 3**, **Quasar**, **React**, **Next.js**, **Angular**, and **Flutter**.
+The official **PadiBase JavaScript / TypeScript SDK** (`padi_js_sdk`) provides a zero-dependency client with Direct HTTP methods, Table CRUD, reactive `AuthStore`, and Auto Realtime (SSE) streaming.
 
 ---
 
-## 📋 Table of Contents
+## 1. Shared Singleton Setup (DRY Principle)
 
-- [🔌 Seamless Integration with Modern Client Apps](#seamless-integration-with-modern-client-apps)
-- [📦 Standard Response Contract](#standard-response-contract)
-- [🌐 Axios Client Setup](#axios-client-setup)
-- [⚛️ React / Next.js Integration Example](#react--nextjs-integration-example)
-- [🟢 Vue 3 / Quasar Integration Example](#vue-3--quasar-integration-example)
-- [📱 Flutter (Dart) Integration Example](#flutter-dart-integration-example)
-
----
-
-## 📦 Standard Response Contract
-
-Every response follows one of two predictable shapes matching the Padi standard:
-
-### 1. Single Entity Response (`item`)
-Returned by `GET /<resource>/{id}`, `POST /<resource>`, `PUT /<resource>/{id}`:
-
-```json
-{
-  "success": true,
-  "message": "Product retrieved successfully",
-  "message_code": "SUCCESS",
-  "item": {
-    "id": 1,
-    "name": "Mechanical Keyboard",
-    "price": 89.99
-  }
-}
-```
-
-### 2. Collection / Paginated Response (`item` with `data` + `meta`)
-Returned by `GET /<resource>?page=1&per_page=15` (paginated) and `GET /<resource>/all` (flat list):
-
-**Paginated:**
-```json
-{
-  "success": true,
-  "message": "Success",
-  "message_code": "SUCCESS",
-  "item": {
-    "data": [
-      { "id": 1, "name": "Mechanical Keyboard", "price": 89.99 }
-    ],
-    "meta": {
-      "total": 50,
-      "per_page": 15,
-      "current_page": 1,
-      "last_page": 4,
-      "from": 1,
-      "to": 15
-    }
-  }
-}
-```
-
-**Unpaginated Collection (`/all`):**
-```json
-{
-  "success": true,
-  "message": "Success",
-  "message_code": "SUCCESS",
-  "item": [
-    { "id": 1, "name": "Mechanical Keyboard", "price": 89.99 }
-  ]
-}
-```
-
----
-
-## 🌐 Axios Client Setup
+Create `src/lib/padi.js` (or `src/lib/padi.ts`) once and import it across your components:
 
 ```javascript
-import axios from 'axios';
+// src/lib/padi.js
+import PadiBase from 'padibase';
 
-const api = axios.create({
-  baseURL: 'http://127.0.0.1:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const padi = new PadiBase(
+  import.meta.env?.VITE_PADIBASE_URL || 'http://127.0.0.1:8085'
+);
 
-// Attach Bearer JWT token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default api;
+export default padi;
 ```
 
 ---
 
-## ⚛️ React / Next.js Integration Example
+## 2. Table & Records CRUD
 
-```tsx
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+```javascript
+import { padi } from '@/lib/padi';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
-
-export const ProductList: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/products?page=1&per_page=10')
-      .then((res) => {
-        // Padi paginated responses store entities in `res.data.item.data`
-        setProducts(res.data.item.data);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
-
-  return (
-    <ul>
-      {products.map((p) => (
-        <li key={p.id}>{p.name} - ${p.price}</li>
-      ))}
-    </ul>
-  );
-};
-```
-
----
-
-## 🟢 Vue 3 / Quasar Integration Example
-
-```vue
-<template>
-  <div class="q-pa-md">
-    <q-table
-      title="Products"
-      :rows="rows"
-      :columns="columns"
-      row-key="id"
-      :loading="loading"
-    />
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import api from 'src/services/api';
-
-const rows = ref([]);
-const loading = ref(true);
-
-const columns = [
-  { name: 'id', label: 'ID', field: 'id', sortable: true },
-  { name: 'name', label: 'Name', field: 'name', sortable: true },
-  { name: 'price', label: 'Price ($)', field: 'price', sortable: true },
-];
-
-onMounted(async () => {
-  try {
-    const res = await api.get('/products/all');
-    rows.value = res.data.items;
-  } finally {
-    loading.value = false;
-  }
+// 1. Paginated records list (Backend 2-level relations & projections applied automatically)
+const result = await padi.table('posts').getList(1, 20, {
+  filter: 'status = "published"',
+  sort: '-created'
 });
-</script>
+
+// 2. Unpaginated full list (/api/posts/all)
+const allPosts = await padi.table('posts').getFullList({ sort: '-created' });
+
+// 3. Single record by ID
+const post = await padi.table('posts').getOne('rec_123');
+
+// 4. Create, Update & Delete (supports JSON object or FormData for file uploads)
+const created = await padi.table('posts').create({ title: 'New Post' });
+await padi.table('posts').update(created.id, { title: 'Updated Title' });
+await padi.table('posts').delete(created.id);
 ```
 
 ---
 
-## 📱 Flutter (Dart) Integration Example
+## 3. Authentication & Reactive AuthStore
 
-```dart
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+```javascript
+// Sign in with Email or Username + Password
+await padi.table('users').authWithPassword('john@example.com', 'secret_password_123');
 
-Future<List<dynamic>> fetchProducts() async {
-  final response = await http.get(
-    Uri.parse('http://10.0.2.2:8080/products?page=1&per_page=15'),
-    headers: {
-      'Authorization': 'Bearer <YOUR_JWT_TOKEN>',
-    },
-  );
+// Register new user
+await padi.table('users').register({
+  email: 'john@example.com',
+  username: 'johndoe',
+  password: 'Password123!',
+  passwordConfirm: 'Password123!'
+});
 
-  if (response.statusCode == 200) {
-    final Map<String, dynamic> body = json.decode(response.body);
-    return body['items']; // Padi collection envelope
-  } else {
-    throw Exception('Failed to load products');
-  }
-}
+// Listen to auth state changes reactively
+padi.authStore.onChange((token, record) => {
+  console.log('Active user:', record);
+});
+```
+
+---
+
+## 4. Auto Realtime Subscriptions (SSE)
+
+```javascript
+// Automatically connects to /api/realtime and reconnects with exponential backoff
+const unsubscribe = padi.table('posts').subscribe('*', (e) => {
+  console.log(e.action, e.table, e.record);
+});
 ```

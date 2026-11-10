@@ -12,9 +12,10 @@
             class="lt-md q-mr-sm"
             @click="leftDrawerOpen = !leftDrawerOpen"
           />
-          <div class="text-h6 text-weight-bold text-gradient">Framework Documentation Hub</div>
+          <div class="text-h6 text-weight-bold text-gradient">PadiBase Studio Documentation Hub</div>
           <q-badge
             color="primary"
+            text-color="dark"
             class="q-ml-sm q-px-sm text-weight-bold"
             :label="'v' + APP_CONFIG.version"
           />
@@ -147,8 +148,8 @@ const selectedMdHtml = ref('')
 
 useMeta(() => ({
   title: selectedMdTitle.value
-    ? `Padi Docs - ${selectedMdTitle.value}`
-    : 'Padi Rust Api Framework Documentation',
+    ? `PadiBase Studio Docs - ${selectedMdTitle.value}`
+    : 'PadiBase Studio Documentation Hub',
 }))
 
 const mdModules = import.meta.glob('./docs/**/*.md', { query: '?raw', import: 'default' })
@@ -933,11 +934,11 @@ onMounted(() => {
   min-height: 50vh;
 
   .text-gradient {
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-    -webkit-text-fill-color: initial !important;
-    color: #e05d44 !important;
+    background: linear-gradient(135deg, #34d399 0%, #10b981 60%, #fbbf24 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: #10b981 !important;
   }
 
   @media (max-width: 599px) {

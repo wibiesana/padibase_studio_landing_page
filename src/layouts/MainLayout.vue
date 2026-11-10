@@ -14,10 +14,11 @@
 
         <q-toolbar-title class="flex items-center cursor-pointer" @click="router.push('/')">
           <div class="logo-box q-mr-md flex items-center justify-center">
-            <q-img :src="logoIcon" width="34px" height="34px" fit="contain" />
+            <q-img :src="logoIcon" width="36px" height="36px" fit="contain" />
           </div>
-          <div class="column justify-center">
-            <span class="text-weight-bolder text-white brand-title">Padi Rust Api Framework</span>
+          <div class="row items-center no-wrap">
+            <span class="text-weight-bolder text-white brand-title">PadiBase</span>
+            <span class="studio-pill q-ml-xs">STUDIO</span>
           </div>
           <q-badge
             color="primary"
@@ -28,15 +29,17 @@
           />
         </q-toolbar-title>
 
-        <div class="gt-sm q-gutter-x-sm flex items-center">
+        <div class="gt-sm q-gutter-x-xs flex items-center">
           <q-btn flat class="nav-btn" :label="$t('nav.home')" to="/" />
+          <q-btn flat class="nav-btn" :label="$t('nav.studio')" @click="handleNav('studio-preview')" />
           <q-btn flat class="nav-btn" :label="$t('nav.features')" @click="handleNav('features')" />
+          <q-btn flat class="nav-btn" :label="$t('nav.sdk')" @click="handleNav('sdk')" />
           <q-btn flat class="nav-btn" :label="$t('nav.quickStart')" @click="handleNav('quickstart')" />
           <q-btn
             color="primary"
             text-color="dark"
             unelevated
-            class="doc-btn text-weight-bolder"
+            class="doc-btn text-weight-bolder q-ml-xs"
             :label="$t('nav.documentation')"
             to="/docs"
             icon="menu_book"
@@ -61,16 +64,36 @@
             menu-class="lang-menu-popover"
           >
             <q-list dark class="lang-menu-list">
-              <q-item clickable v-close-popup @click="setLocale('en-US')" :active="locale === 'en-US'" class="lang-item">
-                <q-item-section avatar style="min-width: 32px"><q-icon name="language" color="primary" size="20px" /></q-item-section>
+              <q-item
+                clickable
+                v-close-popup
+                @click="setLocale('en-US')"
+                :active="locale === 'en-US'"
+                class="lang-item"
+              >
+                <q-item-section avatar style="min-width: 32px">
+                  <q-icon name="language" color="primary" size="20px" />
+                </q-item-section>
                 <q-item-section class="lang-text">English</q-item-section>
-                <q-item-section side v-if="locale === 'en-US'"><q-icon name="check" color="primary" size="18px" /></q-item-section>
+                <q-item-section side v-if="locale === 'en-US'">
+                  <q-icon name="check" color="primary" size="18px" />
+                </q-item-section>
               </q-item>
-              <q-separator dark class="q-my-xs" style="background: #1f2937;" />
-              <q-item clickable v-close-popup @click="setLocale('id-ID')" :active="locale === 'id-ID'" class="lang-item">
-                <q-item-section avatar style="min-width: 32px"><q-icon name="flag" color="primary" size="20px" /></q-item-section>
+              <q-separator dark class="q-my-xs" style="background: #1f2937" />
+              <q-item
+                clickable
+                v-close-popup
+                @click="setLocale('id-ID')"
+                :active="locale === 'id-ID'"
+                class="lang-item"
+              >
+                <q-item-section avatar style="min-width: 32px">
+                  <q-icon name="flag" color="primary" size="20px" />
+                </q-item-section>
                 <q-item-section class="lang-text">Bahasa Indonesia</q-item-section>
-                <q-item-section side v-if="locale === 'id-ID'"><q-icon name="check" color="primary" size="18px" /></q-item-section>
+                <q-item-section side v-if="locale === 'id-ID'">
+                  <q-icon name="check" color="primary" size="18px" />
+                </q-item-section>
               </q-item>
             </q-list>
           </q-btn-dropdown>
@@ -82,27 +105,35 @@
       <q-list>
         <q-item-label header class="text-white">{{ $t('nav.navigation') }}</q-item-label>
         <q-item clickable @click="router.push('/')">
-          <q-item-section avatar><q-icon name="home" /></q-item-section>
+          <q-item-section avatar><q-icon name="home" color="primary" /></q-item-section>
           <q-item-section>{{ $t('nav.home') }}</q-item-section>
         </q-item>
+        <q-item clickable @click="handleNav('studio-preview')">
+          <q-item-section avatar><q-icon name="dashboard_customize" color="primary" /></q-item-section>
+          <q-item-section>{{ $t('nav.studio') }}</q-item-section>
+        </q-item>
         <q-item clickable @click="handleNav('features')">
-          <q-item-section avatar><q-icon name="stars" /></q-item-section>
+          <q-item-section avatar><q-icon name="stars" color="primary" /></q-item-section>
           <q-item-section>{{ $t('nav.features') }}</q-item-section>
         </q-item>
+        <q-item clickable @click="handleNav('sdk')">
+          <q-item-section avatar><q-icon name="integration_instructions" color="primary" /></q-item-section>
+          <q-item-section>{{ $t('nav.sdk') }}</q-item-section>
+        </q-item>
         <q-item clickable @click="handleNav('quickstart')">
-          <q-item-section avatar><q-icon name="speed" /></q-item-section>
+          <q-item-section avatar><q-icon name="terminal" color="primary" /></q-item-section>
           <q-item-section>{{ $t('nav.quickStart') }}</q-item-section>
         </q-item>
         <q-item clickable @click="router.push('/docs')">
-          <q-item-section avatar><q-icon name="book" /></q-item-section>
+          <q-item-section avatar><q-icon name="menu_book" color="primary" /></q-item-section>
           <q-item-section>{{ $t('nav.fullDocumentation') }}</q-item-section>
         </q-item>
-        <q-separator dark q-my-sm />
+        <q-separator dark class="q-my-sm" />
         <q-item clickable tag="a" href="https://github.com/wibiesana/padi_rust" target="_blank">
           <q-item-section avatar><q-icon name="code" color="primary" /></q-item-section>
           <q-item-section>{{ $t('nav.githubRepo') }}</q-item-section>
         </q-item>
-        <q-separator dark q-my-sm />
+        <q-separator dark class="q-my-sm" />
         <q-item-label header class="text-white">Language / Bahasa</q-item-label>
         <q-item clickable @click="setLocale('en-US')" :active="locale === 'en-US'">
           <q-item-section avatar><q-icon name="language" /></q-item-section>
@@ -120,7 +151,13 @@
     </q-page-container>
 
     <q-footer class="bg-dark text-white q-pa-lg text-center border-top">
-      <div class="text-subtitle1">&copy; 2026 Padi Rust Api Framework</div>
+      <div class="row items-center justify-center q-gutter-x-sm q-mb-xs">
+        <q-img :src="logoIcon" width="22px" height="22px" fit="contain" />
+        <span class="text-subtitle1 text-weight-bold">&copy; 2026 PadiBase Studio</span>
+        <span class="text-caption text-emerald-4 bg-emerald-badge q-px-sm q-py-xs rounded-borders">
+          v{{ APP_CONFIG.version }}
+        </span>
+      </div>
       <div class="text-caption text-grey-5">{{ $t('nav.builtWith') }}</div>
     </q-footer>
   </q-layout>
@@ -130,7 +167,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import logoIcon from 'assets/brand/padi_menunduk.png'
+import logoIcon from 'assets/brand/padibase_logo.svg'
 import { APP_CONFIG } from 'src/constants'
 
 const { locale } = useI18n()
@@ -149,8 +186,7 @@ function toggleLeftDrawer() {
 async function handleNav(id) {
   if (route.path !== '/') {
     await router.push('/')
-    // Wait for page to load
-    setTimeout(() => scrollTo(id), 100)
+    setTimeout(() => scrollTo(id), 120)
   } else {
     scrollTo(id)
   }
@@ -159,7 +195,9 @@ async function handleNav(id) {
 function scrollTo(id) {
   const el = document.getElementById(id)
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth' })
+    const yOffset = -86
+    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+    window.scrollTo({ top: y, behavior: 'smooth' })
     leftDrawerOpen.value = false
   }
 }
@@ -167,12 +205,13 @@ function scrollTo(id) {
 
 <style lang="scss" scoped>
 .container {
-  max-width: 1240px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
 .nav-header {
-  background-color: #0b0f17;
+  background-color: rgba(11, 15, 23, 0.92);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid #1f2937;
   position: sticky;
   top: 0;
@@ -183,10 +222,10 @@ function scrollTo(id) {
 }
 
 .logo-box {
-  background: #1f2937;
-  padding: 6px;
+  background: #0f172a;
+  padding: 4px;
   border-radius: 10px;
-  border: 1px solid #374151;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .brand-title {
@@ -195,56 +234,74 @@ function scrollTo(id) {
   color: #ffffff;
 }
 
+.studio-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
 .version-badge {
-  font-size: 0.75rem;
-  padding: 4px 10px;
+  font-size: 0.72rem;
+  padding: 4px 8px;
   border-radius: 6px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .nav-btn {
   color: #d1d5db;
   font-weight: 600;
-  font-size: 0.95rem;
-  padding: 8px 16px;
+  font-size: 0.9rem;
+  padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.2s ease;
 
   &:hover {
-    color: #e05d44;
+    color: #34d399;
     background-color: #1f2937;
   }
 }
 
 .doc-btn {
   border-radius: 8px;
-  padding: 8px 22px;
-  font-size: 0.95rem;
+  padding: 8px 18px;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   &:hover {
-    background-color: #c74d36;
+    background-color: #059669;
+    color: #ffffff !important;
   }
 }
 
 .github-btn {
   border-radius: 8px;
-  padding: 7px 18px;
-  font-size: 0.95rem;
+  padding: 7px 14px;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   &:hover {
-    background-color: rgba(224, 93, 68, 0.1);
+    background-color: rgba(16, 185, 129, 0.12);
   }
 }
 
 .lang-btn {
   border-radius: 8px;
-  font-size: 0.9rem;
-  padding: 6px 14px;
+  font-size: 0.85rem;
+  padding: 6px 12px;
   border-color: #374151 !important;
   &:hover {
-    border-color: #e05d44 !important;
-    color: #e05d44 !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
   }
+}
+
+.bg-emerald-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .border-top {
@@ -280,15 +337,14 @@ function scrollTo(id) {
     }
   }
 
-  /* Fix for Quasar active item default light background */
   .q-item--active,
   .q-item.q-item--active,
   .q-manual-focusable--focused {
-    background-color: rgba(224, 93, 68, 0.15) !important;
-    color: #e05d44 !important;
+    background-color: rgba(16, 185, 129, 0.16) !important;
+    color: #34d399 !important;
 
     .lang-text {
-      color: #e05d44 !important;
+      color: #34d399 !important;
       font-weight: 700 !important;
     }
   }

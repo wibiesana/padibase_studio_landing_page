@@ -1,21 +1,18 @@
-# Padi Rust Api Framework Landing Page
+# 🌾 PadiBase Studio Landing Page & Documentation Hub
 
-The official landing page for the [Padi Rust Api Framework](https://github.com/wibiesana/padi_rust). Built with Quasar Framework (Vue 3).
+Official Landing Page & Documentation Hub for **PadiBase Studio** (High-Performance Multi-Database Backend-as-a-Service in Rust with Embedded Admin Dashboard & Official JS/TS SDK).
 
-## Install the dependencies
-
+## Install dependencies
 ```bash
 npm install
 ```
 
-### Start the app in development mode
-
+## Start the app in development mode
 ```bash
-quasar dev
+npx quasar dev
 ```
 
-### Build the app for production
-
+## Build the app for production
 ```bash
-quasar build
+npx quasar build
 ```

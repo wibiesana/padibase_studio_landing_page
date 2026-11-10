@@ -1,103 +1,35 @@
-# 🎭 Role-Based Access Control (RBAC)
+# 🛡️ Granular API Access Rules, RBAC & Field Projections
 
-## 🛡️ Granular Authorization & Role Enforcement
-
-Padi Rust Framework provides a clean, ergonomic approach to Role-Based Access Control directly via the `AuthUser` extractor.
+**PadiBase Studio** features a unified **API Endpoints & Access Rules** modal in `/_padibase/` that combines security rules, role-based access control (RBAC), server-side field projections, and 2-level relation controls in one place.
 
 ---
 
-## 📋 Table of Contents
+## 1. Default Logged-In Protection
 
-- [🛡️ Granular Authorization & Role Enforcement](#granular-authorization--role-enforcement)
-- [📖 Overview](#overview)
-- [🎭 Enforcing Roles in Controllers (`require_role`)](#enforcing-roles-in-controllers-require_role)
-- [🛠️ Ownership Verification & Self-Data Checks](#ownership-verification--self-data-checks)
-- [⚠️ Error Responses (401 vs 403)](#error-responses-401-vs-403)
-- [⭐ Best Practices](#best-practices)
+By default, mutation operations (`create`, `update`, `delete`) require an authenticated user (`@request.auth.id != ""`). Unauthenticated requests without `Authorization: Bearer <token>` receive `401 Unauthorized`.
 
 ---
 
-## 📖 Overview
+## 2. Independent `list_rule` vs `all_rule`
 
-In Padi Rust, the authenticated user is injected into handler functions using the `auth: AuthUser` extractor. The extractor provides role inspection methods:
+PadiBase separates paginated reading from unpaginated bulk exports:
+- **`list_rule`**: Controls paginated queries (`GET /api/:collection?page=1&perPage=30`).
+- **`all_rule`**: Controls unpaginated full-table queries (`GET /api/:collection/all` and data exports).
 
-- `auth.require_role(&["admin"])?`: Asserts that the authenticated user possesses one of the allowed roles. If not, returns `403 Forbidden` immediately via the `?` operator.
-- `auth.has_role(&["admin", "manager"])`: Checks if the user has any of the given roles, returning a boolean.
-- `auth.role()`: Returns the string role from the JWT payload (`Option<&str>`).
-- `auth.user_id()`: Returns the numeric user ID (`Option<i64>`).
-
----
-
-## 🎭 Enforcing Roles in Controllers (`require_role`)
-
-```rust
-use padi_core::prelude::*;
-
-// Single role enforcement (Admin only)
-pub async fn delete_user(auth: AuthUser, Path(id): Path<i64>) -> ApiResult {
-    auth.require_role(&["admin"])?;
-
-    USERS.delete(id).await?;
-    no_content()
-}
-
-// Multi-role enforcement (Admin or Manager)
-pub async fn export_reports(auth: AuthUser) -> ApiResult {
-    auth.require_role(&["admin", "manager"])?;
-
-    ok(json!({"report": "Q3 Revenue Summary"}))
-}
-```
+This allows you to keep paginated lists `public` for visitors while restricting `/all` bulk pulls to authenticated users or `admin`.
 
 ---
 
-## 🛠️ Ownership Verification & Self-Data Checks
+## 3. Role-Based Access Control (`users.role`)
 
-When modifying sensitive profile data, verify whether the requester owns the account or has administrative privileges:
-
-```rust
-pub async fn update_user(
-    auth: AuthUser,
-    Path(id): Path<i64>,
-    Body(body): Body,
-) -> ApiResult {
-    // If the authenticated user is NOT the owner of the record, require admin role
-    if auth.user_id() != Some(id) {
-        auth.require_role(&["admin"])?;
-    }
-
-    let d = Validator::new(&body, &[
-        ("name", "sometimes|string|min:2|max:100"),
-    ]).validate().await?;
-
-    let updated = USERS.update(id, &d).await?;
-    ok(UserResource::wrap(&updated))
-}
-```
+PadiBase embeds the user's `role` column into JWT claims upon login and supports flexible rule expressions:
+- `@request.auth.role = 'admin'` or `@request.auth.role = 'user'`
+- `@request.auth.role in ['admin', 'manager']`
+- `admin, user` or `role: admin, user`
+- Quick UI Presets: **Auth**, **Public**, **Owner** (`user_id = @request.auth.id`), and **Admin**.
 
 ---
 
-## ⚠️ Error Responses (401 vs 403)
+## 4. Server-Side Field Projections (Resource Transformer)
 
-| Scenario | HTTP Status | Response Code | Description |
-| :--- | :--- | :--- | :--- |
-| **Missing or Invalid JWT Token** | `401 Unauthorized` | `UNAUTHORIZED` | Token was missing, expired, or failed cryptographic verification. |
-| **Insufficient Permissions** | `403 Forbidden` | `FORBIDDEN` | Valid token provided, but user lacks the required role. |
-
-### Forbidden Response Example:
-```json
-{
-  "code": 403,
-  "status": "FORBIDDEN",
-  "message": "Forbidden: Requires one of role(s): [\"admin\"]",
-  "execution_time": "0.62ms"
-}
-```
-
----
-
-## ⭐ Best Practices
-
-1. **Fail Closed:** Always perform authorization checks at the beginning of handler functions before any database reads or mutations.
-2. **Combine Ownership with Admin Override:** Allow administrators to manage user accounts while restricting ordinary users strictly to their own `user_id`.
-3. **Keep Roles Minimal:** Stick to clear, coarse-grained roles (`admin`, `manager`, `user`) in the JWT claims for optimal token size.
+Select which columns are exposed on each read endpoint (`GET /api/:collection`, `GET /api/:collection/all`, `GET /api/:collection/:id`). Columns unchecked by the admin are stripped server-side and can never be accessed by clients—even via `?fields=...`.

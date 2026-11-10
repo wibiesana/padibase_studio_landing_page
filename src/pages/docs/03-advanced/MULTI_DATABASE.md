@@ -1,48 +1,42 @@
-# 🗄️ Multi-Database Support Guide
+# 🗄️ Multi-Database Engine & 2-Level Relations
 
-Padi Rust Framework seamlessly connects to **SQLite**, **MySQL/MariaDB**, and **PostgreSQL** using SQLx asynchronous connection pools.
+Unlike single-driver BaaS tools locked to SQLite, **PadiBase Studio** natively supports **SQLite (WAL Mode)**, **MySQL**, **MariaDB**, and **PostgreSQL** via SQLx connection pools.
 
 ---
 
-## 📋 Database Configuration
+## 1. Connecting Your Database
 
-Configure your database driver in `.env`:
+```bash
+# Default Embedded SQLite (WAL Mode)
+cargo run -- serve --http 127.0.0.1:8085 --dir ./padi_data
 
-```env
-# 1. SQLite (Default embedded file database)
-DB_DRIVER=sqlite
-DB_DATABASE=database/app.db
+# MySQL / MariaDB
+cargo run -- serve --db-url "mysql://root:password@127.0.0.1:3306/PadiBase"
 
-# 2. PostgreSQL
-# DB_DRIVER=pgsql
-# DATABASE_URL=postgres://user:password@127.0.0.1:5432/padi_db
-# Or individual fields:
-# DB_HOST=127.0.0.1
-# DB_PORT=5432
-# DB_DATABASE=padi_db
-# DB_USERNAME=postgres
-# DB_PASSWORD=secret
-
-# 3. MySQL / MariaDB
-# DB_DRIVER=mysql
-# DATABASE_URL=mysql://root:secret@127.0.0.1:3306/padi_db
+# PostgreSQL
+cargo run -- serve --db-url "postgres://postgres:password@127.0.0.1:5432/PadiBase"
 ```
 
 ---
 
-## 🛠️ Database Engine Specifics
+## 2. Automatic Foreign Key & Relation Introspection
 
-| Feature | SQLite | MySQL / MariaDB | PostgreSQL |
-| :--- | :---: | :---: | :---: |
-| **Driver Engine** | SQLx AnyPool | SQLx AnyPool | SQLx AnyPool |
-| **Default Location** | `database/app.db` | Server Host & Port | Server Host & Port |
-| **Primary Key Syntax** | `INTEGER PRIMARY KEY AUTOINCREMENT` | `INT AUTO_INCREMENT PRIMARY KEY` | `SERIAL PRIMARY KEY` |
-| **Concurrency Mode** | WAL mode enabled | Asynchronous connection pool | Asynchronous connection pool |
+PadiBase detects table relations automatically via two mechanisms:
+1. **Naming Convention (`_id` / `Id`)**: Columns like `user_id` or `category_id` are matched against singular/plural table names (`user` / `users`, `category` / `categories`).
+2. **Physical Database `FOREIGN KEY` Constraints**:
+   - **SQLite**: `PRAGMA foreign_key_list('table_name')`
+   - **MySQL / MariaDB**: `INFORMATION_SCHEMA.KEY_COLUMN_USAGE`
+   - **PostgreSQL**: `information_schema.table_constraints`
+
+### Smart `ON DELETE` Integrity
+- **Required (`Req` checked)**: Creates `ON DELETE CASCADE`.
+- **Optional (`Req` unchecked)**: Creates `ON DELETE SET NULL`.
 
 ---
 
-## ⚡ Cross-Database Query Builder Syntax
+## 3. 2-Level Eager Loading (Zero N+1 Problem)
 
-The Padi Query Builder (`Query::table(...)`) and ActiveRecord ORM automatically handle driver nuances:
-- Placeholder syntax and quoting are handled consistently.
-- Schema introspection (`padi g <table_name>`) automatically switches between SQLite `PRAGMA table_info`, MySQL `information_schema.columns`, and PostgreSQL `information_schema.columns`.
+Relations are loaded in a single batch query (`WHERE id IN (...)`) per relation:
+- **Level 1 (Table Master Switch)**: Toggle `auto_load_relations` (`ON` / `OFF`) in Table Settings.
+- **Level 2 (Endpoint Override)**: Configure per endpoint (`list`, `all`, `view`) to inherit table default, load specific relations (`user, chapter`), or disable relations.
+- **Client Query Parameter**: Override dynamically via `?with=user,category` or `?with=none`.

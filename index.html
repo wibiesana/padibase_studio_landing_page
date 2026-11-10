@@ -1,46 +1,64 @@
 <!doctype html>
 <html>
   <head>
-    <title>Padi Rust Api Framework - High-Performance Rust REST API Framework</title>
+    <title>PadiBase Studio - Multi-Database Rust BaaS &amp; Embedded Admin Studio</title>
 
     <meta charset="utf-8" />
-    <meta name="description" content="Padi Rust Api Framework is an industrial-grade, zero-bloat, ultra-lightweight Rust REST API framework. Build secure, blazingly fast RESTful services in Rust with ActiveRecord ORM, Axum, and Tokio in seconds." />
-    <meta name="keywords" content="rust rest api framework, rust rest api, lightweight rust framework, axum rest api, tokio web api, fastest rust api, rust framework, zero dependency rust framework, rust active record orm, building rest api in rust, axum router, jwt authentication rust, rust api boilerplate, rust microframework" />
-    <meta name="author" content="Padi Software" />
+    <meta
+      name="description"
+      content="PadiBase Studio is a modern, high-performance Backend-as-a-Service (BaaS) in Rust inspired by PocketBase &amp; Supabase. Single executable binary with Multi-Database engine (SQLite, MySQL, MariaDB, PostgreSQL), Embedded Admin Studio (/_padibase/), Visual SQL Builder, 2-Level Auto-Load Relations, Granular RBAC, Supabase-style File Storage, Realtime SSE, and Official JS/TS SDK."
+    />
+    <meta
+      name="keywords"
+      content="padibase, padibase studio, rust baas, pocketbase alternative rust, supabase alternative rust, multi database baas, sqlite mysql postgresql baas, visual sql builder, realtime sse rust, embedded admin dashboard, padibase js sdk, rust backend as a service"
+    />
+    <meta name="author" content="PadiBase Team" />
     <meta name="robots" content="index, follow" />
-    
+
     <!-- Structured Data for Software Application (SEO Rich Snippets) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Padi Rust Api Framework",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Linux, Windows, macOS",
-      "softwareVersion": "1.0.1",
-      "description": "An industrial-grade, zero-bloat, lightweight Rust REST API framework optimized for high-throughput Tokio concurrency, ActiveRecord ORM, Axum routing, and sub-millisecond execution.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "license": "https://opensource.org/licenses/MIT",
-      "programmingLanguage": "Rust"
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PadiBase Studio",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Linux, Windows, macOS",
+        "softwareVersion": "0.2.0",
+        "description": "High-performance Backend-as-a-Service (BaaS) written in Rust featuring a single executable binary, Multi-Database support (SQLite, MySQL, MariaDB, PostgreSQL), Embedded Admin Studio (/_padibase/), Visual SQL Query Builder, 2-Level Relations, Granular RBAC, Supabase-style File Storage, Realtime SSE, and Official JS/TS SDK.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "programmingLanguage": "Rust"
+      }
     </script>
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://padisoftware.my.id/" />
-    <meta property="og:title" content="Padi Rust Api Framework - High-Performance Rust REST API Framework" />
-    <meta property="og:description" content="Build secure, zero-bloat, high-performance RESTful APIs in Rust with ActiveRecord ORM instantly." />
+    <meta
+      property="og:title"
+      content="PadiBase Studio - Multi-Database Rust BaaS &amp; Embedded Admin Studio"
+    />
+    <meta
+      property="og:description"
+      content="PocketBase &amp; Supabase simplicity powered by Rust. Multi-DB (SQLite, MySQL, MariaDB, Postgres), Visual SQL Builder, 2-Level Relations, Realtime SSE, and Embedded Studio in a single binary."
+    />
     <meta property="og:image" content="https://padisoftware.my.id/icons/favicon-128x128.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://padisoftware.my.id/" />
-    <meta property="twitter:title" content="Padi Rust Api Framework - High-Performance Rust REST API Framework" />
-    <meta property="twitter:description" content="Build secure, zero-bloat, high-performance RESTful APIs in Rust with ActiveRecord ORM instantly." />
+    <meta
+      property="twitter:title"
+      content="PadiBase Studio - Multi-Database Rust BaaS &amp; Embedded Admin Studio"
+    />
+    <meta
+      property="twitter:description"
+      content="PocketBase &amp; Supabase simplicity powered by Rust. Multi-DB (SQLite, MySQL, MariaDB, Postgres), Visual SQL Builder, 2-Level Relations, Realtime SSE, and Embedded Studio in a single binary."
+    />
     <meta property="twitter:image" content="https://padisoftware.my.id/icons/favicon-128x128.png" />
 
     <meta name="format-detection" content="telephone=no" />
@@ -51,6 +69,7 @@
     />
 
     <link rel="canonical" href="https://padisoftware.my.id/" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" type="image/png" sizes="128x128" href="icons/favicon-128x128.png" />
     <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" />
