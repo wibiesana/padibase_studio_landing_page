@@ -1,166 +1,200 @@
-# 🔐 Authentication & Security
+# 🔐 Authentication & Identity Management
 
-## 🛡️ Fortified Identity Management
-
-Security is a cornerstone of Padi Rust REST API. The Authentication system (`padi_core::auth`) is built on industry-standard JSON Web Tokens (JWT) with HMAC SHA-256 signatures, stateless Bearer headers, Bcrypt password hashing (`padi_core::hash`), and Axum request extractors (`AuthUser`).
+**PadiBase Studio** mengusung arsitektur keamanan tingkat militer dengan algoritma hashing kata sandi **Argon2id**, token stateless **JSON Web Tokens (JWT)**, perlindungan brute-force rate-limiting, dan sistem **Auth Collections** mandiri yang menghasilkan rute autentikasi otomatis.
 
 ---
 
-## 📋 Table of Contents
+## 📋 Daftar Isi
 
-- [🛡️ Fortified Identity Management](#fortified-identity-management)
-- [⚡ Quick Start Flows](#quick-start-flows)
-- [🔑 Endpoints Specification](#endpoints-specification)
-- [🔍 The `AuthUser` Extractor](#the-authuser-extractor)
-- [🔒 Password Hashing (`hash::make` & `hash::check`)](#password-hashing-hashmake--hashcheck)
-- [🛡️ Protecting Custom Endpoints](#protecting-custom-endpoints)
+1. [🛡️ Arsitektur Keamanan PadiBase](#1-arsitektur-keamanan-padibase)
+2. [👑 Superuser Gateway (/api/admins)](#2-superuser-gateway-apiadmins)
+3. [👥 Auth Collections (/api/collections/:authTable)](#3-auth-collections-apicollectionsauthtable)
+4. [🔑 Spesifikasi Endpoint Autentikasi](#4-spesifikasi-endpoint-autentikasi)
+5. [🔄 Rotasi Token & TokenKey Session Invalidation](#5-rotasi-token--tokenkey-session-invalidation)
+6. [🛡️ Perlindungan Brute-Force Rate Limiting](#6-perlindungan-brute-force-rate-limiting)
+7. [💻 Contoh Penggunaan via PadiBase JS SDK](#7-contoh-penggunaan-via-padibase-js-sdk)
 
 ---
 
-## ⚡ Quick Start Flows
+## 1. 🛡️ Arsitektur Keamanan PadiBase
 
-### 1. Register a New User
+PadiBase membedakan otentikasi menjadi dua tingkat yang terisolasi:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        TINGKAT OTENTIKASI PADIBASE                     │
+├───────────────────────────────────┬────────────────────────────────────┤
+│ 👑 Superuser Admin Gateway        │ 👥 User Auth Collections           │
+├───────────────────────────────────┼────────────────────────────────────┤
+│ • Pengelola dashboard Studio      │ • Pengguna akhir / Member aplikasi │
+│ • Tersimpan di tabel `_admins`    │ • Dikelola per-tabel bertipe Auth  │
+│ • Akses penuh ke seluruh skema,   │ • Dibatasi oleh Access Rules &     │
+│   query builder, dan konfigurasi  │   proyeksi kolom per endpoint      │
+│ • Endpoint: `/api/admins/*`       │ • Endpoint: `/api/collections/*`   │
+└───────────────────────────────────┴────────────────────────────────────┘
+```
+
+- **Argon2id Password Hashing**: Standar tertinggi pemenang Password Hashing Competition (PHC). Sangat kebal terhadap serangan GPU, FPGA, dan ASIC side-channel.
+- **Stateless Bearer JWT**: Token ditandatangani secara kriptografis menggunakan kunci rahasia HS256 (`JWT_SECRET`) minimal 32 karakter.
+
+---
+
+## 2. 👑 Superuser Gateway (`/api/admins`)
+
+Digunakan untuk mengotentikasi pengelola PadiBase Studio di `http://127.0.0.1:8085/_padibase/`.
+
+### Alur Bootstrap Admin Pertama:
+1. `GET /api/admins/has-admins`: Memeriksa apakah tabel `_admins` sudah memiliki data.
+2. `POST /api/admins/setup`: Hanya dapat dipanggil **satu kali** saat database masih bersih untuk mendaftarkan Superuser perdana.
+3. `POST /api/admins/auth-with-password`: Login Superuser dengan email dan password.
+
 ```bash
-curl -X POST http://127.0.0.1:8080/auth/register \
+# Login Superuser via curl:
+curl -X POST http://127.0.0.1:8085/api/admins/auth-with-password \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "SecurePass123!"
+    "identity": "admin@padibase.dev",
+    "password": "password_rahasia_123"
   }'
 ```
 
-**Response (201 Created):**
+**Respons (200 OK):**
 ```json
 {
-  "code": 201,
-  "status": "CREATED",
-  "message": "User registered successfully",
-  "item": {
-    "user": {
-      "id": 1,
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "user"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "admin": {
+    "id": "adm_001",
+    "email": "admin@padibase.dev",
+    "avatar": 1
   }
 }
 ```
 
 ---
 
-### 2. Login
-```bash
-curl -X POST http://127.0.0.1:8080/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "SecurePass123!"
-  }'
-```
+## 3. 👥 Auth Collections (`/api/collections/:authTable`)
 
-**Response (200 OK):**
+Ketika Anda membuat tabel bertipe **Auth Collection** di Studio (misalnya tabel `users`, `members`, atau `customers`), PadiBase secara otomatis menyematkan kolom-kolom kredensial dan memvalidasi keamanannya:
+
+- `email`: Alamat email unik tervalidasi.
+- `username`: Nama pengguna unik opsional.
+- `passwordHash`: Hash Argon2id dari kata sandi pengguna (tidak pernah bocor ke respons API).
+- `tokenKey`: Kunci 32 karakter acak yang disematkan ke payload token JWT.
+- `role`: Peran otorisasi pengguna (`user`, `admin`, `manager`, dll).
+- `status`: Status keaktifan akun (`active`, `pending`, `banned`).
+- `verified`: Boolean penanda status verifikasi email.
+- `email_verified_at`: Waktu verifikasi email berhasil.
+
+---
+
+## 4. 🔑 Spesifikasi Endpoint Autentikasi
+
+Setiap tabel Auth Collection otomatis mengekspos endpoint-endpoint berikut:
+
+### 1. Registrasi Akun Baru
+`POST /api/collections/:authTable/register`
 ```json
 {
-  "code": 200,
-  "status": "OK",
-  "message": "Login successful",
-  "item": {
-    "user": {
-      "id": 1,
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "user"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
+  "email": "budi@example.com",
+  "username": "budisantoso",
+  "password": "PasswordAman123!",
+  "passwordConfirm": "PasswordAman123!"
 }
 ```
 
----
-
-### 3. Call Protected Endpoint (`/auth/me`)
-```bash
-curl -X GET http://127.0.0.1:8080/auth/me \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>"
-```
-
-**Response (200 OK):**
+### 2. Login dengan Password
+`POST /api/collections/:authTable/auth-with-password`
 ```json
 {
-  "code": 200,
-  "status": "OK",
-  "message": "User profile retrieved",
-  "item": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "user"
-  }
+  "identity": "budi@example.com",
+  "password": "PasswordAman123!"
+}
+```
+Field `identity` dapat menerima alamat `email` maupun `username`.
+
+### 3. Refresh Token JWT
+`POST /api/collections/:authTable/auth-refresh`
+Kirimkan header `Authorization: Bearer <TOKEN_LAMA>` untuk mendapatkan token baru yang segar.
+
+### 4. Permintaan Reset Password
+`POST /api/collections/:authTable/request-password-reset`
+```json
+{
+  "email": "budi@example.com"
+}
+```
+PadiBase akan mengirimkan email berisi token reset password aman melalui server SMTP yang dikonfigurasi di Settings.
+
+### 5. Konfirmasi Reset Password
+`POST /api/collections/:authTable/confirm-password-reset`
+```json
+{
+  "token": "reset_token_dari_email",
+  "password": "PasswordBaru456!",
+  "passwordConfirm": "PasswordBaru456!"
 }
 ```
 
----
-
-## 🔑 Endpoints Specification
-
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/register` | Public | Register new user account |
-| `POST` | `/auth/login` | Public | Authenticate credentials and receive JWT |
-| `POST` | `/auth/refresh` | Bearer Token | Refresh expiring JWT token |
-| `POST` | `/auth/logout` | Bearer Token | Invalidate session client-side |
-| `GET` | `/auth/me` | Bearer Token | Retrieve currently authenticated user |
-
----
-
-## 🔍 The `AuthUser` Extractor
-
-In Padi Rust, simply adding `auth: AuthUser` to any controller handler signature automatically secures the endpoint. Axum intercepts the request, validates the Bearer token, and extracts the user claims. If the token is missing or invalid, it returns `401 Unauthorized` automatically:
-
-```rust
-use padi_core::prelude::*;
-
-pub async fn my_protected_handler(auth: AuthUser) -> ApiResult {
-    let user_id = auth.user_id().unwrap_or(0);
-    let role = auth.role().unwrap_or("user");
-
-    ok(json!({
-        "message": "Access granted",
-        "user_id": user_id,
-        "role": role
-    }))
+### 6. Ganti Password Pengguna yang Sedang Login
+`POST /api/collections/:authTable/change-password`
+```json
+{
+  "oldPassword": "PasswordAman123!",
+  "newPassword": "PasswordBaruBaru789!",
+  "newPasswordConfirm": "PasswordBaruBaru789!"
 }
 ```
 
----
+### 7. Permintaan & Konfirmasi Verifikasi Email
+- `POST /api/collections/:authTable/request-verification`: Mengirim email verifikasi akun.
+- `POST /api/collections/:authTable/confirm-verification`: Mengonfirmasi token verifikasi email.
 
-## 🔒 Password Hashing (`hash::make` & `hash::check`)
-
-Padi Rust uses Bcrypt password hashing:
-
-```rust
-use padi_core::hash;
-
-// Hash plain-text password:
-let hashed = hash::make("userPassword123");
-
-// Verify password:
-let is_valid = hash::check("userPassword123", &hashed);
-```
+### 8. Ambil Profil Pengguna Aktif
+`GET /api/collections/:authTable/me`
+Header: `Authorization: Bearer <TOKEN>`
 
 ---
 
-## 🛡️ Protecting Custom Endpoints
+## 5. 🔄 Rotasi Token & TokenKey Session Invalidation
 
-To require specific roles, use `auth.require_role`:
+PadiBase menyematkan field `tokenKey` ke dalam klaim JWT pengguna. 
+Ketika pengguna:
+1. Mengubah kata sandinya (`change-password`), atau
+2. Melakukan reset password (`confirm-password-reset`),
 
-```rust
-pub async fn admin_only_handler(auth: AuthUser) -> ApiResult {
-    // Returns 403 Forbidden if user is not admin
-    auth.require_role(&["admin"])?;
+PadiBase secara otomatis **meregenerasi nilai `tokenKey`** di database. Akibatnya, seluruh token JWT lama yang beredar di perangkat lain **langsung tidak valid dan tertolak seketika**, mencegah sesi curian disalahgunakan.
 
-    ok(json!({"admin_data": "secret stats"}))
-}
+---
+
+## 6. 🛡️ Perlindungan Brute-Force Rate Limiting
+
+PadiBase secara otomatis mengaktifkan filter **Rate Limiting sensitif otentikasi**:
+- Rute-rute login, verifikasi, registrasi, dan perubahan password secara ketat dibatasi jumlah percobaannya per alamat IP klien.
+- Upaya tebakan kata sandi berulang akan diblokir dengan respons `429 Too Many Requests`.
+
+---
+
+## 7. 💻 Contoh Penggunaan via PadiBase JS SDK
+
+```javascript
+import PadiBase from 'padibase';
+
+const padi = new PadiBase('http://127.0.0.1:8085');
+
+// 1. Login pengguna
+const authData = await padi.collection('users').authWithPassword('budi@example.com', 'PasswordAman123!');
+console.log('Login berhasil! Token:', authData.token);
+console.log('User Profile:', authData.record);
+
+// Token otomatis tersimpan di padi.authStore dan disematkan ke setiap request berikutnya!
+
+// 2. Ambil profil user saat ini:
+const me = await padi.collection('users').getProfile();
+console.log('Profil saya:', me);
+
+// 3. Ganti kata sandi:
+await padi.collection('users').changePassword('PasswordAman123!', 'PasswordBaruBaru789!');
+
+// 4. Logout:
+padi.authStore.clear();
 ```

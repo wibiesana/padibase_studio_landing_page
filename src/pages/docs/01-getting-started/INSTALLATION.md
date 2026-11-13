@@ -1,115 +1,94 @@
-# 📦 Installation Guide
+# 📦 Installation Guide — PadiBase Studio
 
-## 🚀 Getting Started with Padi Rust
-
-Padi Rust Api Framework is distributed as a lightweight, modular Rust project. You can clone the template starter repository or integrate the `padi_core` crate into an existing Rust application.
+**PadiBase Studio** is distributed as a single high-performance executable binary with an embedded web management dashboard (`/_padibase/`).
 
 ---
 
 ## 📋 System Requirements
 
-- **Rust 1.75+ (2021 Edition)** with `cargo`
-- **Git**
+- **Rust 1.75+ (2021 Edition)** with `cargo` (for building from source)
 - **Database Engine (One of the following):**
-  - **SQLite** (Default - embedded via SQLx, zero external server needed)
-  - **MySQL / MariaDB 5.7+ / 8.0+**
+  - **SQLite** (Default — embedded WAL mode via SQLx in `./padi_data`, zero configuration needed)
   - **PostgreSQL 12+**
+  - **MySQL / MariaDB 5.7+ / 8.0+**
 
 ---
 
 ## 🛠️ Step-by-Step Installation
 
-### 1. Clone the Starter Template
+### 1. Run via Prebuilt Binary
 ```bash
-git clone https://github.com/wibiesana/padi_rust.git my-app
-cd my-app
+# Windows
+./padibase.exe serve --http 127.0.0.1:8085 --dir ./padi_data
+
+# Linux / macOS
+./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
 ```
 
-### 2. Setup Configuration
-Copy the sample environment file:
+### 2. Build from Source via Cargo
 ```bash
-cp .env.example .env
+cd padiBase
+
+# Release build & run:
+cargo run --release -- serve --http 127.0.0.1:8085 --dir ./padi_data
 ```
 
-Review your `.env` settings:
+Or run the convenient batch script on Windows:
+```cmd
+init_backend.bat
+```
+
+---
+
+## ⚙️ Connecting to External Databases
+
+You can connect directly to PostgreSQL, MySQL, or MariaDB using the `--db-url` flag or via `.env`:
+
+```bash
+# PostgreSQL
+cargo run --release -- serve --db-url "postgres://postgres:password@127.0.0.1:5432/padibase"
+
+# MySQL / MariaDB
+cargo run --release -- serve --db-url "mysql://root:secret@127.0.0.1:3306/padibase"
+```
+
+Sample `.env` file:
 ```env
 APP_ENV=development
-APP_DEBUG=true
-APP_HOST=0.0.0.0
-APP_PORT=8080
+APP_HOST=127.0.0.1
+APP_PORT=8085
 
-# sqlite (default) | mysql | pgsql — or set DATABASE_URL directly
+# Database Driver: sqlite | mysql | mariadb | pgsql | postgres
 DB_DRIVER=sqlite
-DB_DATABASE=database/app.db
+DB_DATABASE=padi_data/padi.db
 
-# Min 32 chars, random. Weak/default values are rejected.
+# JWT Configuration (Minimum 32 characters)
 JWT_SECRET=your-secure-random-secret-key-at-least-32-chars
 JWT_ALGORITHM=HS256
+JWT_EXPIRATION=24
 
 CORS_ALLOWED_ORIGINS=*
-RESPONSE_FORMAT=full
-ENABLE_COMPRESSION=true
-CACHE_DRIVER=file
-CACHE_TTL=300
-```
-
-> 💡 **Tip:** You can also run the interactive setup wizard:
-> ```bash
-> padi setup
-> # or: cargo run -- setup
-> ```
-> The wizard configures `.env`, tests your database connection, generates a secure JWT key, runs migrations, and can generate initial CRUD scaffolding.
-
-### 3. Run Migrations
-Run all pending SQL migrations:
-```bash
-padi migrate
-# or: cargo run -- migrate
-```
-
-### 4. Start Server
-Run the Axum server:
-```bash
-padi serve
-# or: cargo run
-```
-
-Your API is now live at `http://127.0.0.1:8080`!
-
----
-
-## 🔄 Updating Framework Core (`padi_core`)
-
-Whenever updates are released to the framework core, update your project dependencies:
-
-```bash
-cargo update -p padi_core
 ```
 
 ---
 
-## 🐳 Running with Docker (Optional)
+## 🔐 First-Run Superuser Setup
 
-You can containerize your Padi Rust application using a multi-stage Docker build:
+Once the server is running:
+1. Open your browser and visit: **`http://127.0.0.1:8085/_padibase/`**
+2. The system detects if any admin exists. If not, the **"Create First Superuser"** wizard is displayed.
+3. Enter your Email and Password (min 8 characters) to log in.
 
-```dockerfile
-# Build stage
-FROM rust:1.75-bullseye AS builder
-WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
-COPY src ./src
-COPY database ./database
-RUN cargo build --release
+You can also create an admin via CLI:
+```bash
+cargo run -- admin create admin@example.com "my_secure_password_123"
+```
 
-# Production stage
-FROM debian:bullseye-slim
-WORKDIR /app
-RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/padi_rust /app/padi_rust
-COPY --from=builder /app/database /app/database
-COPY --from=builder /app/padi /app/padi
-COPY .env.example /app/.env
+---
 
-EXPOSE 8080
-CMD ["./padi_rust", "serve"]
+## 📑 Export Postman v2.1 Collection
+
+Generate ready-to-import API collections for Postman, Insomnia, Thunder Client, Bruno, or VS Code REST Client:
+```bash
+cargo run -- api-collection --force
 ```

@@ -30,6 +30,7 @@ Welcome to the official documentation for **PadiBase Studio** — a modern Backe
 ## 🚀 Getting Started
 
 - **[Quick Start](01-getting-started/QUICK_START.md)**: Launch PadiBase Studio in seconds with SQLite, MySQL, MariaDB, or PostgreSQL.
+- **[First Steps Guide](01-getting-started/FIRST_STEPS.md)**: Master guide on running PadiBase, superuser login, table creation (Base vs Auth), decoupled storage, API config, and dashboard workflows.
 - **[Installation Guide](01-getting-started/INSTALLATION.md)**: Binary setup, Cargo build options, and CLI commands (`serve`, `admin create`, `api-collection`).
 - **[Configuration Guide](01-getting-started/CONFIGURATION.md)**: Environment variables (`.env`), multi-DB drivers, JWT secrets, and upload limits.
 
@@ -37,17 +38,18 @@ Welcome to the official documentation for **PadiBase Studio** — a modern Backe
 
 ## 📚 Core Studio Systems
 
+- **[Tables & Collections Management](02-core-concepts/TABLES_AND_COLLECTIONS.md)**: Comprehensive guide on Base Tables vs Auth Tables, schema fields, decoupled storage URLs, auto foreign keys, batch operations, and access rules.
 - **[Visual SQL Query Builder](02-core-concepts/QUERY_BUILDER.md)**: Interactive SQL designer, `JSON_OBJECT` nested relations, aggregates, and atomic transactions.
 - **[Granular RBAC & Access Rules](02-core-concepts/RBAC.md)**: Independent `list_rule` vs `all_rule`, role expressions, and Server-Side Field Projections.
-- **[File Upload & Supabase-Style Storage](02-core-concepts/FILE_UPLOAD.md)**: Buckets explorer, multipart uploads, XSS sandboxing, and Zero Orphaned Files lifecycle.
-- **[Authentication & JWT](02-core-concepts/AUTHENTICATION.md)**: Argon2id password hashing, register/login/reset flows, and email verification.
+- **[File Storage & Decoupled Media](02-core-concepts/FILE_UPLOAD.md)**: Buckets explorer, standalone multipart uploads, XSS sandboxing, and Zero Orphaned Files lifecycle.
+- **[Authentication & JWT](02-core-concepts/AUTHENTICATION.md)**: Superuser gateway, Auth Collections, Argon2id password hashing, register/login/reset flows, and email verification.
 
 ---
 
 ## 🎯 Advanced Capabilities & SDK
 
+- **[API Config, Custom Endpoints & Postman Export](03-advanced/API_COLLECTION_GUIDE.md)**: Live REST endpoints, custom dynamic SQL endpoints (`/api/custom/*`), cron tasks, and 1-click Postman v2.1 export.
 - **[Frontend Integration & JS/TS SDK](03-advanced/FRONTEND_INTEGRATION.md)**: Official `padibase` SDK guide for Vue 3, React, Svelte, and Direct HTTP methods.
 - **[Multi-Database Engine](03-advanced/MULTI_DATABASE.md)**: Configuring SQLite (WAL), MySQL, MariaDB, and PostgreSQL + 2-Level Foreign Key introspection.
 - **[Realtime SSE Stream](03-advanced/REALTIME.md)**: Live event broadcasting (`/api/realtime`) and Studio Realtime Monitor.
-- **[Postman v2.1 API Collection Exporter](03-advanced/API_COLLECTION_GUIDE.md)**: 1-click export for Postman, Insomnia, Thunder Client, Bruno, and VS Code REST Client.
 - **[Security Architecture](03-advanced/SECURITY.md)**: Default logged-in mutation guards, Argon2id, CORS, and path canonicalization.

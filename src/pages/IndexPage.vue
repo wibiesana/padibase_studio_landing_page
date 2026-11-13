@@ -207,7 +207,7 @@
                       <th>name <span class="type-tag">TEXT</span></th>
                       <th>user_id <span class="fk-tag">FK &rarr; users.id</span></th>
                       <th>user (Auto-Loaded Relation)</th>
-                      <th>avatar <span class="file-tag">FILE</span></th>
+                      <th>avatar_url <span class="type-tag">TEXT · Storage URL</span></th>
                       <th class="text-right">Safe Actions</th>
                     </tr>
                   </thead>
@@ -223,7 +223,7 @@
                       </td>
                       <td>
                         <span class="file-preview-pill font-mono">
-                          <q-icon name="image" size="13px" class="q-mr-xs" />f1a2b3_avatar.png
+                          <q-icon name="image" size="13px" class="q-mr-xs text-primary" />/api/storage/avatars/budi.png
                         </span>
                       </td>
                       <td class="text-right">
@@ -241,7 +241,7 @@
                       </td>
                       <td>
                         <span class="file-preview-pill font-mono">
-                          <q-icon name="image" size="13px" class="q-mr-xs" />9c8d7e_photo.jpg
+                          <q-icon name="image" size="13px" class="q-mr-xs text-primary" />/api/storage/avatars/siti.jpg
                         </span>
                       </td>
                       <td class="text-right">
@@ -914,26 +914,68 @@ ORDER BY safe_views DESC</code></pre>
 
           <!-- Right: Interactive Visual Dashboard Mockup Card -->
           <div class="col-12 col-lg-6">
-            <!-- TAB 1 MOCKUP: TABLES & SCHEMA -->
-            <div v-if="activeGuideStep === 'tables'" class="guide-mockup-window shadow-24 anim-fade">
+            <!-- STEP 1 MOCKUP: START SERVER & LOGIN -->
+            <div v-if="activeGuideStep === 'startAndLogin'" class="guide-mockup-window shadow-24 anim-fade">
               <div class="guide-mockup-header flex items-center justify-between q-px-md q-py-sm">
                 <div class="flex items-center q-gutter-x-xs">
                   <div class="t-dot dot-red"></div>
                   <div class="t-dot dot-yellow"></div>
                   <div class="t-dot dot-green"></div>
-                  <span class="q-ml-sm text-caption text-grey-4 font-mono">Collection: <strong class="text-white">teachers</strong> (Base)</span>
+                  <span class="q-ml-sm text-caption text-grey-4 font-mono">Server Status: <strong class="text-white">http://127.0.0.1:8085</strong></span>
+                </div>
+                <span class="guide-pill-badge bg-emerald-trans text-primary">
+                  <span class="pulse-dot q-mr-xs"></span> Listening
+                </span>
+              </div>
+              <div class="guide-mockup-body q-pa-md">
+                <div class="q-mb-sm text-caption text-grey-5 font-mono">1. RUN SINGLE BINARY VIA CLI:</div>
+                <div class="code-container q-pa-sm q-mb-md">
+                  <pre class="code-content q-ma-none text-caption font-mono"><code class="text-primary">$ cargo run --release -- serve --http 127.0.0.1:8085
+<span class="text-grey-4">> PadiBase Studio listening on http://127.0.0.1:8085</span>
+<span class="text-warning">> Admin Studio UI: http://127.0.0.1:8085/_padibase/</span></code></pre>
+                </div>
+                <div class="q-mb-xs text-caption text-grey-5 font-mono">2. FIRST SUPERUSER BOOTSTRAP WIZARD:</div>
+                <div class="q-pa-sm rounded-borders bg-dark border-light-1 font-mono text-caption q-gutter-y-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="text-grey-4">Superuser Email:</span>
+                    <span class="text-primary text-weight-bold">admin@padibase.dev</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-grey-4">Password (Argon2id):</span>
+                    <span class="text-warning text-weight-bold">••••••••••••••••</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-grey-4">Gateway Status:</span>
+                    <span class="text-emerald text-weight-bold">✓ Authenticated (/api/admins)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between q-pt-md border-top-dark q-mt-md">
+                  <span class="text-caption text-grey-5 font-mono">Studio URL: /_padibase/</span>
+                  <span class="studio-action-chip-primary">Login &amp; Enter Studio &rarr;</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2 MOCKUP: TABLES & SCHEMA -->
+            <div v-else-if="activeGuideStep === 'tables'" class="guide-mockup-window shadow-24 anim-fade">
+              <div class="guide-mockup-header flex items-center justify-between q-px-md q-py-sm">
+                <div class="flex items-center q-gutter-x-xs">
+                  <div class="t-dot dot-red"></div>
+                  <div class="t-dot dot-yellow"></div>
+                  <div class="t-dot dot-green"></div>
+                  <span class="q-ml-sm text-caption text-grey-4 font-mono">Collection: <strong class="text-white">posts</strong> (Base Collection)</span>
                 </div>
                 <span class="guide-pill-badge bg-emerald-trans text-primary">Live Sync Ready</span>
               </div>
               <div class="guide-mockup-body q-pa-md">
-                <div class="q-mb-sm text-caption text-grey-5 font-mono">FIELD DEFINITION &amp; SCHEMA:</div>
+                <div class="q-mb-sm text-caption text-grey-5 font-mono">SCHEMA BUILDER &amp; DECOUPLED STORAGE:</div>
                 <div class="guide-field-list q-gutter-y-xs font-mono text-caption q-mb-md">
                   <div class="guide-field-row flex items-center justify-between q-pa-xs">
                     <span class="text-white text-weight-bold">id</span>
                     <span class="type-tag">INTEGER PRIMARY KEY</span>
                   </div>
                   <div class="guide-field-row flex items-center justify-between q-pa-xs">
-                    <span class="text-white text-weight-bold">name</span>
+                    <span class="text-white text-weight-bold">title</span>
                     <span class="type-tag">TEXT · NOT NULL</span>
                   </div>
                   <div class="guide-field-row flex items-center justify-between q-pa-xs">
@@ -941,12 +983,15 @@ ORDER BY safe_views DESC</code></pre>
                     <span class="fk-tag">RELATION &rarr; users.id (CASCADE)</span>
                   </div>
                   <div class="guide-field-row flex items-center justify-between q-pa-xs">
-                    <span class="text-info text-weight-bold">avatar</span>
-                    <span class="file-tag">FILE · max 5MB</span>
+                    <span class="text-info text-weight-bold">cover_url</span>
+                    <span class="type-tag">TEXT · Storage URL <q-badge color="primary" text-color="dark" label="+ Upload Btn" class="q-ml-xs" /></span>
                   </div>
                 </div>
                 <div class="flex items-center justify-between q-pt-sm border-top-dark">
-                  <span class="studio-action-chip">+ Add Field</span>
+                  <div class="flex q-gutter-x-xs">
+                    <span class="studio-action-chip">+ Add Field</span>
+                    <span class="studio-action-chip">Batch Create/Delete</span>
+                  </div>
                   <div class="flex q-gutter-x-xs">
                     <span class="studio-action-chip-primary">⚡ Sync DB Schema</span>
                     <span class="studio-action-chip bg-primary text-dark text-weight-bold">Save Changes</span>
@@ -955,7 +1000,7 @@ ORDER BY safe_views DESC</code></pre>
               </div>
             </div>
 
-            <!-- TAB 2 MOCKUP: ACCESS RULES & RBAC -->
+            <!-- STEP 3 MOCKUP: ACCESS RULES & RBAC -->
             <div v-else-if="activeGuideStep === 'rules'" class="guide-mockup-window shadow-24 anim-fade">
               <div class="guide-mockup-header flex items-center justify-between q-px-md q-py-sm">
                 <div class="flex items-center q-gutter-x-xs">
@@ -995,6 +1040,46 @@ ORDER BY safe_views DESC</code></pre>
                     <span class="projection-chip projection-chip-active">✓ author</span>
                     <span class="projection-chip projection-chip-hidden">🔒 password (hidden)</span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 4 MOCKUP: API CONFIG & ENDPOINTS -->
+            <div v-else-if="activeGuideStep === 'apiconfig'" class="guide-mockup-window shadow-24 anim-fade">
+              <div class="guide-mockup-header flex items-center justify-between q-px-md q-py-sm">
+                <div class="flex items-center q-gutter-x-xs">
+                  <div class="t-dot dot-red"></div>
+                  <div class="t-dot dot-yellow"></div>
+                  <div class="t-dot dot-green"></div>
+                  <span class="q-ml-sm text-caption text-grey-4 font-mono">REST API Config: <strong class="text-white">Active Routes</strong></span>
+                </div>
+                <span class="guide-pill-badge bg-info-trans text-info">Postman v2.1 Ready</span>
+              </div>
+              <div class="guide-mockup-body q-pa-md">
+                <div class="q-mb-sm text-caption text-grey-5 font-mono">LIVE REST ROUTES &amp; CUSTOM SQL:</div>
+                <div class="q-gutter-y-xs font-mono text-caption q-mb-md">
+                  <div class="guide-rule-row flex items-center justify-between q-pa-xs">
+                    <span class="text-grey-3"><q-badge color="positive" label="GET" class="q-mr-xs" />/api/posts</span>
+                    <span class="text-grey-4">Paginated List (Auto-Load 2-Level FK)</span>
+                  </div>
+                  <div class="guide-rule-row flex items-center justify-between q-pa-xs">
+                    <span class="text-grey-3"><q-badge color="warning" text-color="dark" label="POST" class="q-mr-xs" />/api/collections/users/auth-with-password</span>
+                    <span class="text-grey-4">Auth Table · Argon2id Login</span>
+                  </div>
+                  <div class="guide-rule-row flex items-center justify-between q-pa-xs">
+                    <span class="text-grey-3"><q-badge color="info" label="GET" class="q-mr-xs" />/api/custom/user-analytics</span>
+                    <span class="text-info font-bold">Custom SQL (:since, :limit)</span>
+                  </div>
+                  <div class="guide-rule-row flex items-center justify-between q-pa-xs">
+                    <span class="text-grey-3"><q-badge color="purple" label="CRON" class="q-mr-xs" />0 0 * * *</span>
+                    <span class="text-grey-4">Daily Scheduled Maintenance</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between q-pt-sm border-top-dark">
+                  <span class="studio-action-chip">+ New Custom SQL API</span>
+                  <span class="studio-action-chip-primary">
+                    <q-icon name="download" size="14px" class="q-mr-xs" />Export Postman Collection
+                  </span>
                 </div>
               </div>
             </div>
@@ -1452,9 +1537,15 @@ onUnmounted(() => {
   if (observer) observer.disconnect()
 })
 
-const activeGuideStep = ref('tables')
+const activeGuideStep = ref('startAndLogin')
 
 const guideSteps = computed(() => [
+  {
+    id: 'startAndLogin',
+    label: t('quickStart.tabs.startAndLogin'),
+    icon: 'rocket_launch',
+    color: 'primary',
+  },
   {
     id: 'tables',
     label: t('quickStart.tabs.tables'),
@@ -1468,16 +1559,16 @@ const guideSteps = computed(() => [
     color: 'warning',
   },
   {
+    id: 'apiconfig',
+    label: t('quickStart.tabs.apiconfig'),
+    icon: 'api',
+    color: 'info',
+  },
+  {
     id: 'storage',
     label: t('quickStart.tabs.storage'),
     icon: 'inventory_2',
     color: 'primary',
-  },
-  {
-    id: 'realtime',
-    label: t('quickStart.tabs.realtime'),
-    icon: 'sensors',
-    color: 'info',
   },
   {
     id: 'sqlbuilder',
@@ -1485,17 +1576,32 @@ const guideSteps = computed(() => [
     icon: 'auto_fix_high',
     color: 'warning',
   },
+  {
+    id: 'realtime',
+    label: t('quickStart.tabs.realtime'),
+    icon: 'sensors',
+    color: 'info',
+  },
 ])
 
 function getWorkflowInstructions(stepId) {
-  const steps = [0, 1, 2, 3, 4]
+  const steps = [0, 1, 2, 3, 4, 5, 6]
   return steps
     .map((i) => t(`quickStart.workflows.${stepId}.instructions[${i}]`))
     .filter((txt) => txt && !txt.startsWith('quickStart.'))
 }
 
 function openInStudioPreview(stepId) {
-  activeStudioTab.value = stepId
+  const map = {
+    startAndLogin: 'tables',
+    tables: 'tables',
+    rules: 'rules',
+    apiconfig: 'endpoints',
+    storage: 'storage',
+    sqlbuilder: 'sqlbuilder',
+    realtime: 'realtime',
+  }
+  activeStudioTab.value = map[stepId] || 'tables'
   scrollTo('studio-preview')
 }
 

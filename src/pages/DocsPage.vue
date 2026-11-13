@@ -166,6 +166,7 @@ const iconMap = {
   'INIT_APP_TROUBLESHOOTING.md': 'moped',
 
   // Core Concepts
+  'TABLES_AND_COLLECTIONS.md': 'table_chart',
   'ROUTING.md': 'hub',
   'CONTROLLERS.md': 'gamepad',
   'MODELS.md': 'rebase_edit',
@@ -239,6 +240,7 @@ const explicitOrder = [
   'init app troubleshooting',
 
   // Core Concepts
+  'tables and collections',
   'cli interface',
   'authentication',
   'rbac',
