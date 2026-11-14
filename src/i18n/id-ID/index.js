@@ -204,7 +204,7 @@ export default {
         title: 'Menjalankan Server PadiBase & Setup Admin Pertama',
         desc: 'Jalankan server backend PadiBase dalam hitungan detik dengan SQLite bawaan atau koneksi PostgreSQL/MySQL, lalu bootstrap akun Superuser pertama.',
         instructions: [
-          'Jalankan server PadiBase di terminal: `cargo run --release -- serve --http 127.0.0.1:8085` (atau eksekusi `./padibase.exe serve`).',
+          'Jalankan aplikasi binary PadiBase yang sudah siap pakai: `./padibase serve --http 127.0.0.1:8085` (di Windows: `padibase.exe serve` atau klik ganda `init_backend.bat`).',
           'Buka browser dan akses alamat Studio: `http://127.0.0.1:8085/_padibase/`.',
           'Pada kunjungan pertama, sistem otomatis menampilkan wizard "Create First Superuser" karena belum ada admin terdaftar di sistem (_admins).',
           'Masukkan Email dan Password admin (minimal 8 karakter), lalu klik "Create & Login". Akun admin juga dapat dibuat via CLI: `padibase admin create admin@example.com "password123"`.',

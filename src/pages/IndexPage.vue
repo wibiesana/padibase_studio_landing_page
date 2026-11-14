@@ -930,7 +930,7 @@ ORDER BY safe_views DESC</code></pre>
               <div class="guide-mockup-body q-pa-md">
                 <div class="q-mb-sm text-caption text-grey-5 font-mono">1. RUN SINGLE BINARY VIA CLI:</div>
                 <div class="code-container q-pa-sm q-mb-md">
-                  <pre class="code-content q-ma-none text-caption font-mono"><code class="text-primary">$ cargo run --release -- serve --http 127.0.0.1:8085
+                  <pre class="code-content q-ma-none text-caption font-mono"><code class="text-primary">$ ./padibase serve --http 127.0.0.1:8085
 <span class="text-grey-4">> PadiBase Studio listening on http://127.0.0.1:8085</span>
 <span class="text-warning">> Admin Studio UI: http://127.0.0.1:8085/_padibase/</span></code></pre>
                 </div>

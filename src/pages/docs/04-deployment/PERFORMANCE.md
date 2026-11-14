@@ -56,7 +56,7 @@ DB_MAX_CONNECTIONS=50
 
 ## ⚙️ Binary Optimization & Compilation Flags
 
-Compile with `cargo build --release` which applies Link-Time Optimization (LTO) and codegen optimizations:
+The pre-built PadiBase binary is already compiled with maximum Link-Time Optimization (LTO) and native machine optimizations enabled:
 
 ```toml
 # In Cargo.toml:

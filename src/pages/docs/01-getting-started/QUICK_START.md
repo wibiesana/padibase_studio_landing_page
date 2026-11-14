@@ -1,27 +1,35 @@
 # ⚡ Quick Start Guide — PadiBase Studio
 
-Get **PadiBase Studio** running in under 60 seconds with embedded SQLite (WAL Mode) or connect directly to MySQL, MariaDB, or PostgreSQL.
+Get **PadiBase Studio** running in under 30 seconds using the pre-built executable binary with zero installation or build steps.
 
 ---
 
 ## 1. Start the PadiBase Server
 
-### Option A: Zero-Config Embedded SQLite (Default)
-```bash
-cargo run -- serve --http 127.0.0.1:8085 --dir ./padi_data
+### Option A: Windows (Pre-built Executable)
+```cmd
+padibase.exe serve --http 127.0.0.1:8085 --dir ./padi_data
+```
+Or simply double-click the included shortcut:
+```cmd
+init_backend.bat
 ```
 
-### Option B: Connect to PostgreSQL, MySQL, or MariaDB
+### Option B: Linux / macOS
+```bash
+./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
+```
+
+### Option C: Connect Directly to PostgreSQL, MySQL, or MariaDB
 ```bash
 # PostgreSQL
-cargo run -- serve --db-url "postgres://postgres:password@127.0.0.1:5432/PadiBase"
+./padibase serve --db-url "postgres://postgres:password@127.0.0.1:5432/PadiBase"
 
 # MySQL / MariaDB
-cargo run -- serve --db-url "mysql://root:password@127.0.0.1:3306/PadiBase"
-cargo run -- serve --db-url "mariadb://root:password@127.0.0.1:3306/PadiBase"
+./padibase serve --db-url "mysql://root:password@127.0.0.1:3306/PadiBase"
 ```
 
-Or configure via `.env`:
+Or configure via a `.env` file placed next to the binary:
 ```env
 DB_DRIVER=mysql        # sqlite | mysql | mariadb | pgsql | postgres
 DB_HOST=127.0.0.1
@@ -39,9 +47,9 @@ Open your browser and navigate to:
 - **PadiBase Studio Dashboard**: `http://127.0.0.1:8085/_padibase/`
 - **REST API Base URL**: `http://127.0.0.1:8085/api/`
 
-On your first visit, PadiBase Studio automatically detects if a Superuser exists (`/api/admins/has-admins`) and displays the **"Create First Superuser"** wizard. You can also create an admin via CLI:
+On your first visit, PadiBase Studio automatically detects that no admin exists yet and displays the **"Create First Superuser"** wizard. You can also create an admin via the CLI:
 ```bash
-cargo run -- admin create admin@example.com "password_rahasia_123"
+./padibase admin create admin@example.com "password_rahasia_123"
 ```
 
 ---
@@ -51,11 +59,12 @@ cargo run -- admin create admin@example.com "password_rahasia_123"
 Generate ready-to-import collections for **Postman, Insomnia, Thunder Client, Bruno, or VS Code REST Client**:
 ```bash
 # Export full system + all individual table collections to ./api_collection
-cargo run -- api-collection --force
+./padibase api-collection --force
 
 # Export a specific table only
-cargo run -- api-collection --collection users --force
+./padibase api-collection --collection users --force
 ```
+You can also click the **"Export Postman Collection"** button directly inside the Studio web UI.
 
 ---
 
@@ -68,7 +77,7 @@ import PadiBase from 'padibase';
 export const padi = new PadiBase('http://127.0.0.1:8085');
 
 // Query paginated records (2-level relations & field projections auto-resolved!)
-const posts = await padi.table('posts').getList(1, 20, { sort: '-created' });
+const posts = await padi.table('posts').getList(1, 20, { sort: '-created_at' });
 
 // Subscribe to Realtime SSE events
 padi.table('posts').subscribe('*', (e) => {

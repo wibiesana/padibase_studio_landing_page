@@ -1,41 +1,41 @@
-# 🗄️ Tables & Collections — Panduan Mendalam
+# 🗄️ Tables & Collections — In-Depth Reference
 
-Menu **Tables / Collections** adalah fondasi utama dalam **PadiBase Studio**. Dari menu ini, Anda merancang skema data relasional, mengonfigurasi aturan keamanan per-endpoint (RBAC), menghubungkan relasi antar-tabel bebas masalah N+1, serta mengelola data record dengan antarmuka spreadsheet interaktif yang aman dan ergonomis.
+The **Tables / Collections** workspace is the core engine of **PadiBase Studio**. From this interface, you design relational database schemas, configure per-endpoint security rules (RBAC), establish relations with zero N+1 overhead, and manage live record data with a spreadsheet-like drawer interface.
 
 ---
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [🏗️ Konsep Koleksi & Tabel di PadiBase](#1-konsep-koleksi--tabel-di-padibase)
-2. [👥 Perbedaan Mendalam: Base Table vs Auth Table](#2-perbedaan-mendalam-base-table-vs-auth-table)
-3. [📝 Skema Kolom & Jenis Tipe Data](#3-skema-kolom--jenis-tipe-data)
-4. [📁 Arsitektur Decoupled File Storage (Penting)](#4-arsitektur-decoupled-file-storage-penting)
-5. [🔗 Relasi Cerdas, Foreign Keys & Zero N+1 Engine](#5-relasi-cerdas-foreign-keys--zero-n1-engine)
-6. [🛡️ Keamanan Endpoint: Access Rules & Granular RBAC](#6-keamanan-endpoint-access-rules--granular-rbac)
-7. [👁️ Server-Side Field Projections (Privasi Kolom)](#7-server-side-field-projections-privasi-kolom)
-8. [📊 Manajemen Record di Studio Dashboard](#8-manajemen-record-di-studio-dashboard)
-9. [⚡ Operasi Batch: Batch Create & Batch Delete](#9-operasi-batch-batch-create--batch-delete)
+1. [🏗️ Collections & Tables Architecture](#1-collections--tables-architecture)
+2. [👥 Deep Dive: Base Table vs. Auth Table](#2-deep-dive-base-table-vs-auth-table)
+3. [📝 Schema Fields & Data Types](#3-schema-fields--data-types)
+4. [📁 Decoupled File Storage Architecture (Crucial)](#4-decoupled-file-storage-architecture-crucial)
+5. [🔗 Smart Relations, Foreign Keys & Zero N+1 Engine](#5-smart-relations-foreign-keys--zero-n1-engine)
+6. [🛡️ Endpoint Security: Access Rules & Granular RBAC](#6-endpoint-security-access-rules--granular-rbac)
+7. [👁️ Server-Side Field Projections (Column Privacy)](#7-server-side-field-projections-column-privacy)
+8. [📊 Studio Record Management](#8-studio-record-management)
+9. [⚡ Batch Operations: Batch Create & Batch Delete](#9-batch-operations-batch-create--batch-delete)
 10. [🔄 1-Click Database Schema Sync](#10-1-click-database-schema-sync)
-11. [💻 Contoh Penggunaan via PadiBase JS SDK](#11-contoh-penggunaan-via-padibase-js-sdk)
+11. [💻 Usage via PadiBase JS SDK](#11-usage-via-padibase-js-sdk)
 
 ---
 
-## 1. 🏗️ Konsep Koleksi & Tabel di PadiBase
+## 1. 🏗️ Collections & Tables Architecture
 
-Di PadiBase Studio, istilah **Collection** dan **Table** digunakan secara sinonim:
-- Setiap **Collection** yang Anda buat di antarmuka visual Studio dipetakan langsung menjadi tabel fisik di database pilihan Anda (**SQLite**, **PostgreSQL**, **MySQL**, atau **MariaDB**).
-- Setiap Collection secara otomatis menghasilkan **REST API Gateway** lengkap dengan paginasi, sorting, filter fleksibel, auto-load relasi, dan event broadcasting Realtime SSE.
-- Struktur tabel dan skemanya disimpan di metadata internal PadiBase (`_collections`) dan selalu disinkronkan secara atomik dengan struktur fisik database.
+In PadiBase Studio, the terms **Collection** and **Table** are synonymous:
+- Every **Collection** created via the Studio UI maps directly to a physical table in your chosen database (**SQLite**, **PostgreSQL**, **MySQL**, or **MariaDB**).
+- Every Collection automatically exposes a comprehensive **REST API Gateway** with pagination, sorting, conditional filtering, auto-loaded relations, and live Realtime SSE broadcasting.
+- Schema definitions are persisted in PadiBase's internal metadata (`_collections`) and kept in atomic synchronization with the underlying database.
 
 ---
 
-## 2. 👥 Perbedaan Mendalam: Base Table vs Auth Table
+## 2. 👥 Deep Dive: Base Table vs. Auth Table
 
-Saat membuat koleksi baru dengan mengklik **"+ New Collection"**, Anda wajib memilih salah satu dari dua tipe koleksi:
+When creating a collection via **"+ New Collection"**, you choose between two collection types:
 
 ```text
                                ┌────────────────────────────────┐
-                               │       TIPE KOLEKSI PADIBASE    │
+                               │     PADIBASE COLLECTION TYPE   │
                                └──────────────┬─────────────────┘
                                               │
                       ┌───────────────────────┴───────────────────────┐
@@ -43,224 +43,212 @@ Saat membuat koleksi baru dengan mengklik **"+ New Collection"**, Anda wajib mem
          ┌─────────────────────────┐                     ┌─────────────────────────┐
          │     BASE COLLECTION     │                     │     AUTH COLLECTION     │
          ├─────────────────────────┤                     ├─────────────────────────┤
-         │ • Untuk data umum       │                     │ • Untuk pengguna/member │
-         │ • Bebas tambah kolom    │                     │ • Kolom kredensial bawaan│
-         │ • CRUD REST API standar │                     │ • Endpoint Auth lengkap │
-         │   (/api/:table)         │                     │   (login, register, dll)│
+         │ • Domain / business data│                     │ • Users / members       │
+         │ • Custom schema fields  │                     │ • Built-in credentials  │
+         │ • Standard REST CRUD    │                     │ • Complete Auth routes  │
+         │   (/api/:table)         │                     │   (login, register, etc)│
          └─────────────────────────┘                     └─────────────────────────┘
 ```
 
-### A. Base Collection (Koleksi Data Standar)
-Gunakan tipe ini untuk seluruh tabel data bisnis Anda, seperti: `posts`, `products`, `orders`, `categories`, `transactions`, `reviews`.
-- **Kolom Standar Bawaan**:
-  - `id`: Primary key unik (Integer auto-increment atau string ID).
-  - `created_at`: Waktu pembuatan baris data.
-  - `updated_at`: Waktu pembaruan data terakhir.
-- **Rute REST yang Dihasilkan**:
-  - `GET /api/:table`: Daftar terpaginasi (dengan relasi & proyeksi kolom).
-  - `GET /api/:table/all`: Daftar lengkap tanpa batas paginasi.
-  - `GET /api/:table/:id`: Mengambil 1 record spesifik berdasarkan ID.
-  - `POST /api/:table`: Membuat record baru.
-  - `PATCH /api/:table/:id`: Memperbarui record sebagian (partial update).
-  - `DELETE /api/:table/:id`: Menghapus record secara aman.
+### A. Base Collection (General Application Data)
+Use this for domain entities (e.g., `posts`, `products`, `orders`, `categories`, `reviews`).
+- **Default System Columns**:
+  - `id`: Unique primary key (Auto-increment integer or string identifier).
+  - `created_at`: Row creation timestamp.
+  - `updated_at`: Last modification timestamp.
+- **Auto-Generated REST Endpoints**:
+  - `GET /api/:table`: Paginated list (with relations & projections).
+  - `GET /api/:table/all`: Unpaginated full dump.
+  - `GET /api/:table/:id`: Single record detail.
+  - `POST /api/:table`: Create new record.
+  - `PATCH /api/:table/:id`: Partial record update.
+  - `DELETE /api/:table/:id`: Delete record.
 
-### B. Auth Collection (Koleksi Pengguna & Otentikasi)
-Gunakan tipe ini untuk tabel yang mewakili entitas pengguna yang memiliki akses login dan kredensial, seperti: `users`, `members`, `customers`, `staff`.
-- **Kolom Kredensial & Identitas Otomatis**:
+### B. Auth Collection (User Identity & Credentials)
+Use this for accounts that authenticate with credentials (e.g., `users`, `members`, `customers`, `staff`).
+- **Built-in Authentication Columns**:
   - `id`: Primary Key.
-  - `email`: Alamat surel unik pengguna (dilengkapi validasi format dan unique index).
-  - `username`: Nama pengguna unik opsional.
-  - `passwordHash`: Hash kata sandi terenkripsi menggunakan algoritma **Argon2id** (kebal serangan GPU/ASIC).
-  - `tokenKey`: Kunci rotasi token acak 32 karakter untuk invalidasi sesi instan jika kata sandi diubah.
-  - `role`: Peran otorisasi (default: `user`, atau disesuaikan menjadi `admin`, `moderator`).
-  - `status`: Status akun (`active`, `pending`, `banned`).
-  - `verified`: Boolean penanda apakah email sudah diverifikasi.
-  - `email_verified_at`: Timestamp kapan email berhasil diverifikasi.
+  - `email`: Unique, RFC-validated email address (Indexed).
+  - `username`: Optional unique username.
+  - `passwordHash`: Encrypted password hash using **Argon2id** (never returned via API).
+  - `tokenKey`: 32-character random key embedded in JWT claims for instant session revocation upon password updates.
+  - `role`: Authorization role (`user`, `admin`, `moderator`, etc.).
+  - `status`: Account status (`active`, `pending`, `banned`).
+  - `verified`: Boolean indicating email verification.
+  - `email_verified_at`: Timestamp of email verification.
   - `created_at` & `updated_at`.
-- **Endpoint Otentikasi Bawaan Khusus**:
-  Setiap Auth Collection otomatis memiliki rute autentikasi lengkap tanpa perlu membuat custom code backend:
-  - `POST /api/collections/:authTable/auth-with-password`: Login dengan verifikasi Argon2id dan menerbitkan JWT Bearer.
-  - `POST /api/collections/:authTable/register`: Registrasi mandiri akun baru dengan validasi password min 8 karakter.
-  - `POST /api/collections/:authTable/auth-refresh`: Memperpanjang token JWT sebelum kedaluwarsa.
-  - `POST /api/collections/:authTable/request-password-reset`: Mengirim email tautan token reset password.
-  - `POST /api/collections/:authTable/confirm-password-reset`: Menerapkan kata sandi baru menggunakan token reset.
-  - `POST /api/collections/:authTable/request-verification`: Mengirim email konfirmasi verifikasi alamat surel.
-  - `POST /api/collections/:authTable/confirm-verification`: Mengonfirmasi email pengguna.
-  - `POST /api/collections/:authTable/change-password`: Mengubah kata sandi pengguna yang sedang login.
-  - `GET /api/collections/:authTable/me`: Mengambil profil pengguna yang terotentikasi.
+- **Built-in Authentication Endpoints**:
+  Every Auth Collection automatically provides complete authentication endpoints without custom code:
+  - `POST /api/collections/:authTable/auth-with-password`: Login verifying Argon2id password and issuing JWT Bearer.
+  - `POST /api/collections/:authTable/register`: Self-registration with password validation.
+  - `POST /api/collections/:authTable/auth-refresh`: Extend an active JWT token before expiry.
+  - `POST /api/collections/:authTable/request-password-reset`: Send password reset email token.
+  - `POST /api/collections/:authTable/confirm-password-reset`: Apply new password using the reset token.
+  - `POST /api/collections/:authTable/request-verification`: Send email verification link.
+  - `POST /api/collections/:authTable/confirm-verification`: Confirm email verification token.
+  - `POST /api/collections/:authTable/change-password`: Update password (requires current password).
+  - `GET /api/collections/:authTable/me`: Retrieve current authenticated profile.
 
 ---
 
-## 3. 📝 Skema Kolom & Jenis Tipe Data
+## 3. 📝 Schema Fields & Data Types
 
-PadiBase Studio mendukung tipe data kolom yang fleksibel dan terpetakan secara native ke database fisik:
+PadiBase Studio supports 8 field types mapped natively to physical SQL types:
 
-| Tipe Data Kolom | Tipe SQL Fisik (SQLite / Postgres / MySQL) | Deskripsi & Contoh |
+| Field Data Type | Physical SQL Type (SQLite / Postgres / MySQL) | Description & Examples |
 | :--- | :--- | :--- |
-| **TEXT** | `TEXT` / `VARCHAR(255)` | String teks biasa, deskripsi panjang, maupun **URL penyimpanan file media** (`title`, `slug`, `avatar_url`). |
-| **NUMBER** | `INTEGER` / `BIGINT` / `DECIMAL` / `REAL` | Nilai numerik integer maupun pecahan desimal (`price`, `stock`, `rating`, `quantity`). |
-| **BOOLEAN** | `BOOLEAN` / `TINYINT(1)` | Nilai logika kebenaran (`is_published`, `featured`, `is_active`). |
-| **DATE** | `TIMESTAMP` / `DATETIME` | Penanda waktu dan tanggal ISO-8601 (`published_at`, `due_date`, `expiry_date`). |
-| **JSON** | `JSON` / `JSONB` / `TEXT` | Struktur data arbitrer, array nilai, atau konfigurasi dinamis (`settings`, `tags`, `metadata`). |
-| **RELATION** | `INTEGER` / `BIGINT` (Foreign Key) | Kolom relasi yang merujuk ke tabel lain (`user_id -> users.id`, `category_id -> categories.id`). |
-| **EMAIL** | `VARCHAR(255)` | String teks yang otomatis divalidasi dengan regex standar RFC email (`contact_email`, `billing_email`). |
-| **SELECT** | `VARCHAR(100)` | Pilihan nilai tetap (enum dropdown) yang dibatasi pada daftar opsi tertentu (`status: ['draft', 'published', 'archived']`). |
+| **TEXT** | `TEXT` / `VARCHAR(255)` | Strings, multiline text, or **media storage file URLs** (`title`, `slug`, `avatar_url`). |
+| **NUMBER** | `INTEGER` / `BIGINT` / `DECIMAL` / `REAL` | Integer or floating-point / decimal numbers (`price`, `stock`, `rating`, `quantity`). |
+| **BOOLEAN** | `BOOLEAN` / `TINYINT(1)` | Logical truth value (`is_published`, `featured`, `is_active`). |
+| **DATE** | `TIMESTAMP` / `DATETIME` | ISO-8601 timestamps (`published_at`, `due_date`, `expiry_date`). |
+| **JSON** | `JSON` / `JSONB` / `TEXT` | Structured JSON objects, arrays, or configurations (`settings`, `tags`, `metadata`). |
+| **RELATION** | `INTEGER` / `BIGINT` (Foreign Key) | Foreign Key referencing another collection (`user_id -> users.id`, `category_id -> categories.id`). |
+| **EMAIL** | `VARCHAR(255)` | RFC-validated email string (`contact_email`, `billing_email`). |
+| **SELECT** | `VARCHAR(100)` | Fixed dropdown enumeration options (`status: ['draft', 'published', 'archived']`). |
 
 ---
 
-## 4. 📁 Arsitektur Decoupled File Storage (Penting)
+## 4. 📁 Decoupled File Storage Architecture (Crucial)
 
 > [!IMPORTANT]
-> **PadiBase TIDAK MENYEDIAKAN tipe kolom `FILE` pada skema tabel.**
-> Sesuai arsitektur modern standar industri (seperti Supabase, Firebase Storage, dan AWS S3), file biner tidak disimpan langsung di baris tabel database, melainkan menggunakan pola **Decoupled File Storage**:
+> **PADIBASE DOES NOT PROVIDE A `FILE` COLUMN TYPE IN TABLE SCHEMAS.**
+> Following modern cloud architecture standards (such as Supabase, Firebase Storage, and AWS S3), binary files are decoupled from database rows:
 
 ```text
-┌─────────────────┐       1. Upload File (multipart)       ┌────────────────────────┐
-│  Klien Frontend │ ─────────────────────────────────────> │  Storage API           │
-│  atau UI Studio │ <───────────────────────────────────── │  /api/storage/:bucket  │
-└────────┬────────┘       2. Kembalikan URL File           └───────────┬────────────┘
+┌─────────────────┐       1. Standalone Upload (multipart) ┌────────────────────────┐
+│ Frontend Client │ ─────────────────────────────────────> │  Storage API           │
+│ or Studio UI    │ <───────────────────────────────────── │  /api/storage/:bucket  │
+└────────┬────────┘       2. Returns Media File URL        └───────────┬────────────┘
          │                   { "url": "/api/storage/..." }             │
-         │                                                             │ Simpan Fisik
-         │ 3. Simpan URL ke Kolom TEXT                                 ▼
-         │    { "title": "Buku Baru", "cover_url": "..." }     ┌────────────────────────┐
+         │                                                             │ Stores file
+         │ 3. Save URL in TEXT Column                                  ▼
+         │    { "title": "New Book", "cover_url": "..." }      ┌────────────────────────┐
          ▼                                                     │ padi_data/storage/     │
 ┌─────────────────────────────────┐                            │ (Zero Orphan Cleanup)  │
-│  Tabel Database (Base/Auth)     │                            └────────────────────────┘
-│  Kolom cover_url bertipe TEXT   │
+│ Database Table (Base or Auth)   │                            └────────────────────────┘
+│ Column cover_url is type TEXT   │
 └─────────────────────────────────┘
 ```
 
-### Mengapa Decoupled Storage Lebih Unggul?
-1. **Performa Database Stabil**: Database tidak terbebani oleh ukuran file biner (BLOB) yang membuat ukuran database membengkak dan memperlambat backup.
-2. **CDN & Streaming Mandiri**: File media dapat di-stream dan di-cache secara independen via HTTP caching header.
-3. **Zero Orphaned Files**: Ketika record dihapus atau URL file diganti, sistem garbage collection PadiBase otomatis menghapus file fisik lama dari disk sehingga media tidak menumpuk sia-sia.
+### Why Decoupled Storage is Superior:
+1. **Lean Database Footprint**: Databases do not suffer from binary BLOB bloat, keeping backups fast and queries lightweight.
+2. **Independent CDN & Streaming**: Media files can be streamed, cached, and served independently with HTTP cache headers.
+3. **Zero Orphaned Files**: When a record is deleted or its file URL updated, PadiBase automatically deletes physical files from disk.
 
-### Kemudahan Ekstra di Dashboard Studio:
-Meskipun arsitektur penyimpanannya decoupled, PadiBase Studio memberikan pengalaman pengguna yang sangat mulus:
-- Di drawer formulir tambah/edit record, di samping kolom URL teks (misal `avatar_url`), terdapat tombol **"Upload to Storage"**.
-- Anda cukup mengklik tombol tersebut atau memilih file gambar/dokumen dari komputer.
-- Studio akan otomatis mengunggah file ke bucket yang dipilih, menerima URL hasil upload, dan **langsung mengisi URL tersebut ke input teks secara otomatis**.
-- Tabel spreadsheet juga dilengkapi **Thumbnail Preview** dan **Lightbox Modal** untuk melihat gambar langsung dari tabel.
+### Seamless Studio UI Drawer Integration:
+In the PadiBase Studio record creation/edit drawer:
+- Next to text fields intended for media (e.g., `avatar_url`), an **"Upload to Storage"** button is provided.
+- Clicking it allows picking a file from your computer.
+- Studio uploads the file to the chosen storage bucket, retrieves the URL, and **automatically populates the text field**.
+- Live image thumbnails and a **Lightbox modal** allow inspecting images directly from the spreadsheet table.
 
 ---
 
-## 5. 🔗 Relasi Cerdas, Foreign Keys & Zero N+1 Engine
+## 5. 🔗 Smart Relations, Foreign Keys & Zero N+1 Engine
 
-PadiBase memudahkan pembuatan relasi antar-tabel tanpa perlu menulis perintah SQL `ALTER TABLE ADD FOREIGN KEY` secara manual:
+Connecting collections is straightforward without manual SQL `ALTER TABLE` statements:
 
-### Cara Mengonfigurasi Kolom RELATION:
-1. Buka skema tabel dan klik **"+ Add Field"**.
-2. Pilih tipe **RELATION**.
-3. Tentukan nama kolom (disarankan menggunakan konvensi sufiks `_id`, misalnya: `user_id`, `author_id`, `category_id`).
-4. Pilih **Target Collection** (misal: `users`).
-5. Tentukan sifat kolom:
-   - **Required (Wajib diisi)**: PadiBase otomatis menerapkan constraint database fisik **`ON DELETE CASCADE`** (jika user dihapus, data miliknya otomatis ikut terhapus).
-   - **Nullable (Opsional)**: PadiBase otomatis menerapkan constraint database fisik **`ON DELETE SET NULL`** (jika user dihapus, kolom `user_id` diubah menjadi `NULL`).
+### Configuring a RELATION Field:
+1. In schema editing, click **"+ Add Field"**.
+2. Select type **RELATION**.
+3. Name the column (recommended: `user_id`, `author_id`, `category_id`).
+4. Select the **Target Collection** (e.g., `users`).
+5. Choose constraints:
+   - **Required**: Applies physical database constraint **`ON DELETE CASCADE`** (deleting the parent deletes child rows).
+   - **Nullable**: Applies physical database constraint **`ON DELETE SET NULL`** (deleting the parent sets the child's FK column to `NULL`).
 
 ### Zero N+1 Query Engine:
-Masalah klasik pada REST API adalah masalah performa **N+1 Queries**: mengambil 50 artikel membutuhkan 1 query untuk mengambil artikel, ditambah 50 query susulan untuk mengambil nama user dari masing-masing artikel!
-
-**Bagaimana PadiBase Mengatasinya?**
-- Ketika endpoint `GET /api/posts` dipanggil, PadiBase mengumpulkan semua nilai `user_id` unik dari 50 artikel tersebut.
-- PadiBase mengeksekusi **hanya 1 query batch tunggal**:
+In traditional APIs, fetching 50 posts requires 1 query for the posts plus 50 queries for their authors (N+1 problem).
+**PadiBase solves this automatically:**
+- When `GET /api/posts` is called, PadiBase collects all unique `user_id` values.
+- It executes **a single batch query**:
   ```sql
   SELECT * FROM users WHERE id IN (1, 5, 8, 12, ...);
   ```
-- Objek user relasi kemudian secara otomatis dipasangkan ke properti `user` pada masing-masing record JSON.
-- **Hasil**: Performa respons API tetap di bawah 5 milidetik meskipun menampilkan data relasional bertingkat!
+- Related user objects are merged into the `user` property of each JSON post record with sub-5ms response times.
 
 ---
 
-## 6. 🛡️ Keamanan Endpoint: Access Rules & Granular RBAC
+## 6. 🛡️ Endpoint Security: Access Rules & Granular RBAC
 
-Keamanan data pada setiap tabel diatur melalui modal **API Endpoints & Access Rules** di header tabel Studio.
+Table security is managed per-action in the **API Endpoints & Access Rules** modal:
 
-PadiBase memisahkan hak akses secara independen untuk setiap jenis aksi:
-
-| Aksi | Endpoint REST | Fungsi |
+| Action | REST Endpoint | Purpose |
 | :--- | :--- | :--- |
-| **`list_rule`** | `GET /api/:table` | Membaca daftar record **terpaginasi** (misal: halaman blog publik). |
-| **`all_rule`** | `GET /api/:table/all` | Menarik **seluruh baris data tabel** sekaligus tanpa paginasi (misal: ekspor CSV). |
-| **`view_rule`** | `GET /api/:table/:id` | Membaca detail satu baris data tertentu berdasarkan ID. |
-| **`create_rule`**| `POST /api/:table` | Menambahkan baris data baru ke tabel. |
-| **`update_rule`**| `PATCH /api/:table/:id` | Mengubah atau memperbarui data baris tertentu. |
-| **`delete_rule`**| `DELETE /api/:table/:id` | Menghapus baris data dari database. |
+| **`list_rule`** | `GET /api/:table` | Read **paginated** records (e.g., public blog feed). |
+| **`all_rule`** | `GET /api/:table/all` | Fetch **entire table without pagination** (e.g., admin CSV export). |
+| **`view_rule`** | `GET /api/:table/:id` | Read a single record by ID. |
+| **`create_rule`**| `POST /api/:table` | Insert a new record. |
+| **`update_rule`**| `PATCH /api/:table/:id` | Update an existing record. |
+| **`delete_rule`**| `DELETE /api/:table/:id` | Delete a record. |
 
-### Mengapa Memisahkan `list_rule` vs `all_rule`?
-Banyak BaaS konvensional menggabungkan aturan baca menjadi satu. Akibatnya, jika Anda mengizinkan publik membaca daftar artikel terpaginasi, bot atau pihak luar dapat langsung memanggil endpoint ekspor untuk mendownload seluruh isi database Anda!
-Dengan PadiBase, Anda dapat mengatur:
-- `list_rule = "public"`: Pengunjung umum bebas melihat artikel halaman demi halaman.
-- `all_rule = "@request.auth.role = 'admin'"`: Hanya admin terotentikasi yang boleh menarik seluruh data tabel.
+### Why Separate `list_rule` vs. `all_rule`?
+You can safely keep `list_rule = "public"` so visitors can browse paginated posts (e.g., 20 per page), while strictly locking `all_rule = "@request.auth.role = 'admin'"`. This prevents automated bots from scraping your entire database in a single request.
 
-### Sintaks & Contoh Rule Populer:
+### Common Rule Expressions:
 ```text
-• Akses Publik (Siapa saja boleh):
+• Public Access (Anyone allowed):
   public
   true
 
-• Wajib Login (Pengguna terotentikasi via Bearer Token):
+• Authenticated User Required:
   @request.auth.id != ""
 
-• Hanya Peran Tertentu (Role-Based Access Control):
+• Role-Based Access Control (RBAC):
   @request.auth.role = 'admin'
   @request.auth.role in ['admin', 'moderator']
 
-• Kepemilikan Data (Owner Check - Hanya pemilik data yang boleh akses):
+• Owner Protection (User can only touch their own data):
   user_id = @request.auth.id
   author_id = @request.auth.id
 
-• Terkunci Total (Hanya Superuser Admin):
+• Completely Locked (Superuser only):
   false
   null
 ```
 
 ---
 
-## 7. 👁️ Server-Side Field Projections (Privasi Kolom)
+## 7. 👁️ Server-Side Field Projections (Column Privacy)
 
-Di samping Access Rules per-aksi, PadiBase menyediakan tab **Projected Fields** (Whitelisting Kolom):
-- Anda dapat memilih kolom mana saja yang diizinkan untuk dikembalikan oleh server ke klien pada endpoint baca (`list`, `all`, `view`).
-- Kolom sensitif yang tidak dicentang (misalnya: `passwordHash`, `tokenKey`, `internal_margin`, `admin_notes`) **akan dihapus di sisi server oleh Resource Transformer**.
-- Klien tidak akan pernah bisa mengakses kolom yang tersembunyi tersebut, bahkan jika mereka memintanya secara eksplisit via query string `?fields=...`.
-
----
-
-## 8. 📊 Manajemen Record di Studio Dashboard
-
-PadiBase Studio menyediakan antarmuka tabel spreadsheet yang sangat nyaman:
-
-1. **Spreadsheet Data Table**: Menampilkan seluruh data tabel secara bersih, lengkap dengan label penanda tipe data (PK, FK, TEXT, NUMBER, JSON).
-2. **Pencarian Cepat & Filter**: Cari data secara real-time pada search input di toolbar atas.
-3. **Sorting Dinamis**: Klik judul kolom untuk mengurutkan data secara Ascending (A-Z, 0-9) atau Descending (Z-A, 9-0).
-4. **Ergonomic Safety**: Mengklik baris tabel tidak akan memicu form edit yang tidak disengaja. Drawer edit hanya terbuka jika Anda secara eksplisit menekan tombol **"Edit"**.
-5. **Drawer Form & JSON Mode**: Input data melalui formulir visual yang rapi, atau beralih ke tab **JSON Mode** untuk menempelkan data mentah.
-6. **Direct Storage Upload**: Tombol pintas unggah media di samping kolom URL teks.
+In the **Projected Fields** tab:
+- Choose which columns clients are allowed to receive on read endpoints (`list`, `all`, `view`).
+- Unchecked columns (e.g., `passwordHash`, `tokenKey`, `internal_margin`) **are stripped server-side by the Resource Transformer**.
+- Clients cannot access hidden columns, even when specifying explicit `?fields=...` queries.
 
 ---
 
-## 9. ⚡ Operasi Batch: Batch Create & Batch Delete
+## 8. 📊 Studio Record Management
 
-Untuk kebutuhan migrasi data atau input massal, PadiBase mendukung operasi batch berkecepatan tinggi:
+1. **Spreadsheet Table View**: Clean tabular presentation with data type tags (PK, FK, TEXT, NUMBER, JSON).
+2. **Realtime Search & Sorting**: Instant search bar and clickable column headers for Ascending/Descending ordering.
+3. **Ergonomic Safety**: Clicking rows will not accidentally trigger edits; the slide-over drawer only opens when clicking **"Edit"**.
+4. **Form Drawer & JSON Mode**: Input data visually or paste raw JSON.
+5. **Direct Storage Upload**: Instant file upload button next to any media text field.
+
+---
+
+## 9. ⚡ Batch Operations: Batch Create & Batch Delete
 
 ### A. Batch Create (`POST /api/:table/batch`)
-Anda dapat mengirimkan array berisi puluhan hingga ratusan record dalam satu kali request:
+Send an array of dozens or hundreds of records in a single request:
 ```bash
 curl -X POST http://127.0.0.1:8085/api/products/batch \
-  -H "Authorization: Bearer <ADMIN_OR_USER_JWT>" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '[
-    { "name": "Produk A", "price": 50000, "stock": 100 },
-    { "name": "Produk B", "price": 75000, "stock": 50 },
-    { "name": "Produk C", "price": 120000, "stock": 30 }
+    { "name": "Product A", "price": 50000, "stock": 100 },
+    { "name": "Product B", "price": 75000, "stock": 50 },
+    { "name": "Product C", "price": 120000, "stock": 30 }
   ]'
 ```
-Semua data di-insert dalam satu batch transaksi database SQLx yang atomic dan super cepat.
+All rows are inserted atomically in a single high-speed database transaction.
 
 ### B. Batch Delete (`DELETE /api/:table/batch`)
-Di dashboard Studio:
-1. Centang kotak seleksi di sebelah kiri baris record yang ingin Anda hapus.
-2. Klik tombol **"Delete Selected"** pada bilah aksi batch.
-3. Konfirmasi dialog penghapusan aman untuk menghapus baris-baris tersebut secara serentak.
+In the Studio UI:
+1. Select checkboxes for rows you want to delete.
+2. Click **"Delete Selected"** on the batch action bar.
+3. Confirm the safety dialog to remove rows simultaneously.
 
 Via API:
 ```bash
@@ -274,20 +262,20 @@ curl -X DELETE http://127.0.0.1:8085/api/products/batch \
 
 ## 10. 🔄 1-Click Database Schema Sync
 
-Ketika Anda menambahkan kolom baru, menghapus kolom, atau melakukan perubahan skema fisik langsung di server database (misal via DBeaver atau pgAdmin):
-- Klik tombol **"Sync DB Schema"** di toolbar tabel Studio.
-- PadiBase akan melakukan query introspeksi skema fisik (`sqlite_master` / `information_schema.columns`) dan memperbarui metadata PadiBase secara instan tanpa perlu mematikan atau me-restart server backend!
+When making external database modifications (e.g., via pgAdmin, DBeaver, or command line):
+- Click **"Sync DB Schema"** in the Studio table toolbar.
+- PadiBase introspects physical schema tables (`sqlite_master` / `information_schema.columns`) and updates internal metadata immediately without server restarts.
 
 ---
 
-## 11. 💻 Contoh Penggunaan via PadiBase JS SDK
+## 11. 💻 Usage via PadiBase JS SDK
 
 ```javascript
 import PadiBase from 'padibase';
 
 const padi = new PadiBase('http://127.0.0.1:8085');
 
-// 1. Ambil data terpaginasi dengan filter & relasi otomatis
+// 1. Fetch paginated data with automatic relations
 const posts = await padi.table('posts').getList(1, 20, {
   sort: '-created_at',
   filter: 'is_published = true'
@@ -295,32 +283,31 @@ const posts = await padi.table('posts').getList(1, 20, {
 console.log('Total items:', posts.totalItems);
 console.log('Posts:', posts.items);
 
-// 2. Upload file ke storage, lalu buat record baru dengan URL file
+// 2. Upload media to Storage, then store URL in table record
 const file = document.querySelector('#fileInput').files[0];
 const uploadRes = await padi.storage.upload('avatars', file);
 
 const newProfile = await padi.table('profiles').create({
   full_name: 'Budi Santoso',
   avatar_url: uploadRes.url,
-  bio: 'Software Engineer di Indonesia'
+  bio: 'Software Engineer'
 });
 
-// 3. Batch Create data
-const batchResult = await padi.table('tags').createBatch([
+// 3. Batch Create
+await padi.table('tags').createBatch([
   { name: 'Rust' },
   { name: 'Vue3' },
   { name: 'PadiBase' }
 ]);
 
-// 4. Batch Delete data berdasarkan array ID
+// 4. Batch Delete
 await padi.table('tags').deleteBatch([1, 2, 3]);
 ```
 
 ---
 
-## 🎯 Dokumen Terkait
-- **[Panduan Decoupled File Storage](FILE_UPLOAD.md)**
-- **[Panduan Autentikasi & JWT](AUTHENTICATION.md)**
-- **[Panduan Visual SQL Builder](QUERY_BUILDER.md)**
-- **[Panduan Integrasi Frontend](../03-advanced/FRONTEND_INTEGRATION.md)**
-
+## 🎯 Related Documentation
+- **[Decoupled File Storage Guide](FILE_UPLOAD.md)**
+- **[Authentication & JWT Reference](AUTHENTICATION.md)**
+- **[Visual SQL Builder Reference](QUERY_BUILDER.md)**
+- **[Frontend Integration Guide](../03-advanced/FRONTEND_INTEGRATION.md)**

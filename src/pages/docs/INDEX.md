@@ -31,7 +31,7 @@ Welcome to the official documentation for **PadiBase Studio** — a modern Backe
 
 - **[Quick Start](01-getting-started/QUICK_START.md)**: Launch PadiBase Studio in seconds with SQLite, MySQL, MariaDB, or PostgreSQL.
 - **[First Steps Guide](01-getting-started/FIRST_STEPS.md)**: Master guide on running PadiBase, superuser login, table creation (Base vs Auth), decoupled storage, API config, and dashboard workflows.
-- **[Installation Guide](01-getting-started/INSTALLATION.md)**: Binary setup, Cargo build options, and CLI commands (`serve`, `admin create`, `api-collection`).
+- **[Installation Guide](01-getting-started/INSTALLATION.md)**: Pre-built binary execution and CLI commands (`serve`, `admin create`, `api-collection`).
 - **[Configuration Guide](01-getting-started/CONFIGURATION.md)**: Environment variables (`.env`), multi-DB drivers, JWT secrets, and upload limits.
 
 ---
@@ -53,3 +53,12 @@ Welcome to the official documentation for **PadiBase Studio** — a modern Backe
 - **[Multi-Database Engine](03-advanced/MULTI_DATABASE.md)**: Configuring SQLite (WAL), MySQL, MariaDB, and PostgreSQL + 2-Level Foreign Key introspection.
 - **[Realtime SSE Stream](03-advanced/REALTIME.md)**: Live event broadcasting (`/api/realtime`) and Studio Realtime Monitor.
 - **[Security Architecture](03-advanced/SECURITY.md)**: Default logged-in mutation guards, Argon2id, CORS, and path canonicalization.
+
+---
+
+## 🚀 Deployment & Production
+
+- **[Docker Deployment](04-deployment/DOCKER.md)**: Ultra-compact container with pre-built binary.
+- **[Production Hardening](04-deployment/PRODUCTION.md)**: Standalone binary execution, Systemd service, and reverse proxy setup.
+- **[Performance & Tuning](04-deployment/PERFORMANCE.md)**: Concurrency, latency, and database pool sizing.
+- **[Troubleshooting](04-deployment/TROUBLESHOOTING.md)**: Resolutions for common operational questions.

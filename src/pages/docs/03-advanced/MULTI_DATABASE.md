@@ -8,13 +8,13 @@ Unlike single-driver BaaS tools locked to SQLite, **PadiBase Studio** natively s
 
 ```bash
 # Default Embedded SQLite (WAL Mode)
-cargo run -- serve --http 127.0.0.1:8085 --dir ./padi_data
+./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
 
 # MySQL / MariaDB
-cargo run -- serve --db-url "mysql://root:password@127.0.0.1:3306/PadiBase"
+./padibase serve --db-url "mysql://root:password@127.0.0.1:3306/PadiBase"
 
 # PostgreSQL
-cargo run -- serve --db-url "postgres://postgres:password@127.0.0.1:5432/PadiBase"
+./padibase serve --db-url "postgres://postgres:password@127.0.0.1:5432/PadiBase"
 ```
 
 ---

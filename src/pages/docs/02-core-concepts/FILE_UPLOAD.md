@@ -1,30 +1,30 @@
 # 📁 File Storage & Supabase-Style Storage Explorer
 
-**PadiBase Studio** mengusung arsitektur **Decoupled File Storage** terisolasi berkecepatan tinggi yang dipadukan dengan **Supabase-Style Storage Explorer** visual di `/_padibase/storage`. Sistem ini dilengkapi sandbox keamanan konten aktif, pencegahan directory traversal, dan **Zero Orphaned Files** pembersihan fisik otomatis.
+**PadiBase Studio** features an isolated, high-performance **Decoupled File Storage** engine paired with a visual **Supabase-Style Storage Explorer** at `/_padibase/storage`. The system includes active content sandboxing, directory traversal prevention, and **Zero Orphaned Files** automatic disk garbage collection.
 
 ---
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [🏗️ Arsitektur Decoupled File Storage](#1-arsitektur-decoupled-file-storage)
-2. [📁 Supabase-Style Storage Explorer di Studio](#2-supabase-style-storage-explorer-di-studio)
-3. [⚡ Alur Unggah & Penyimpanan URL ke Tabel](#3-alur-unggah--penyimpanan-url-ke-tabel)
-4. [🛡️ Keamanan: Sandbox XSS & Path Traversal Guard](#4-keamanan-sandbox-xss--path-traversal-guard)
-5. [🧹 Siklus Hidup Zero Orphaned Files (Garbage Collection)](#5-siklus-hidup-zero-orphaned-files-garbage-collection)
-6. [💻 Contoh Penggunaan via SDK & REST API](#6-contoh-penggunaan-via-sdk--rest-api)
+1. [🏗️ Decoupled File Storage Architecture](#1-decoupled-file-storage-architecture)
+2. [📁 Supabase-Style Storage Explorer in Studio](#2-supabase-style-storage-explorer-in-studio)
+3. [⚡ Upload Workflow & Storing URLs in Tables](#3-upload-workflow--storing-urls-in-tables)
+4. [🛡️ Security: XSS Sandbox & Path Traversal Guards](#4-security-xss-sandbox--path-traversal-guards)
+5. [🧹 Zero Orphaned Files Lifecycle (Garbage Collection)](#5-zero-orphaned-files-lifecycle-garbage-collection)
+6. [💻 Usage Examples via SDK & REST API](#6-usage-examples-via-sdk--rest-api)
 
 ---
 
-## 1. 🏗️ Arsitektur Decoupled File Storage
+## 1. 🏗️ Decoupled File Storage Architecture
 
 > [!IMPORTANT]
-> **Tidak ada kolom bertipe `FILE` pada skema tabel PadiBase.**
-> Berbeda dari pendekatan lama yang mencampuradukkan payload multipart record dengan skema tabel, PadiBase Studio memisahkan penanganan file media ke layer **Storage Dedicated**:
-> 1. File diunggah secara independen ke endpoint storage (`/api/storage/:bucket`).
-> 2. Endpoint mengembalikan URL publik/terproteksi ke file tersebut.
-> 3. Klien atau form Studio menyimpan URL file tersebut ke kolom bertipe **`TEXT`** (misal: `avatar_url`, `cover_image`, `document_path`).
+> **There is no `FILE` column type in PadiBase table schemas.**
+> Rather than mixing multipart binary payloads into table schemas, PadiBase separates media management into a dedicated **Storage Layer**:
+> 1. Files are uploaded independently to storage endpoints (`POST /api/storage/:bucket`).
+> 2. The endpoint returns a public or protected URL for the file.
+> 3. Your client or Studio form stores this file URL into a standard **`TEXT`** column (e.g., `avatar_url`, `cover_image`, `document_path`).
 
-### Tata Letak Direktori Penyimpanan Terisolasi:
+### Isolated Storage Directory Layout:
 ```text
 padi_data/storage/
 ├── avatars/
@@ -38,38 +38,38 @@ padi_data/storage/
 
 ---
 
-## 2. 📁 Supabase-Style Storage Explorer di Studio
+## 2. 📁 Supabase-Style Storage Explorer in Studio
 
-Navigasikan ke menu **Storage** di sidebar Studio (`/_padibase/storage`) untuk menikmati fitur media explorer:
+Navigate to the **Storage** menu in the Studio sidebar (`/_padibase/storage`):
 
-- **Daftar Bucket Terisolasi**: Tinjau semua bucket media (misal: `avatars`, `covers`, `documents`) lengkap dengan metrik total file dan total konsumsi penyimpanan (`KB / MB / GB`).
-- **Tampilan Dual Mode**:
-  - **Table View**: Tampilan tabel rinci dengan nama file, ukuran, tipe MIME, dan tanggal upload.
-  - **Grid Cards View**: Tampilan galeri kartu dengan thumbnail gambar resolusi tinggi.
-- **Lightbox Image Viewer**: Klik thumbnail gambar untuk membuka modal Lightbox layar penuh tanpa perlu meninggalkan dashboard.
-- **1-Click Copy URL**: Tombol salin URL instan untuk mendapatkan tautan `/api/storage/:bucket/:file` ke clipboard.
-- **Force Download (`?download=1`)**: Unduh file secara paksa dengan header `Content-Disposition: attachment`.
+- **Isolated Bucket Management**: View all media buckets (e.g., `avatars`, `covers`, `documents`) with live metrics on total file count and disk usage (`KB / MB / GB`).
+- **Dual View Modes**:
+  - **Table View**: Detailed tabular view displaying filenames, byte sizes, MIME types, and timestamps.
+  - **Grid Cards View**: Visual thumbnail gallery with high-resolution image previews.
+- **Lightbox Image Viewer**: Click image thumbnails to inspect full-size pictures in a modal without leaving the dashboard.
+- **1-Click Copy URL**: Instant button to copy public links (`/api/storage/:bucket/:file`) directly to the clipboard.
+- **Force Download (`?download=1`)**: Download files explicitly with `Content-Disposition: attachment`.
 
 ---
 
-## 3. ⚡ Alur Unggah & Penyimpanan URL ke Tabel
+## 3. ⚡ Upload Workflow & Storing URLs in Tables
 
-### Di Antarmuka Visual PadiBase Studio:
-Saat Anda mengedit atau membuat baris record di menu **Table**:
-1. Buka drawer record.
-2. Di samping input teks kolom gambar (misal `avatar_url`), klik tombol **"Upload to Storage"**.
-3. Pilih file gambar atau dokumen dari komputer Anda.
-4. PadiBase Studio langsung mengunggah file tersebut ke bucket Storage, menerima URL-nya, dan **menempelkannya ke input teks secara otomatis**.
-5. Gambar pratinjau langsung muncul di samping input teks.
+### In the PadiBase Studio Web UI:
+When adding or editing records in the **Tables** menu:
+1. Open the record slide-over drawer.
+2. Next to any text field for media (e.g., `avatar_url`), click **"Upload to Storage"**.
+3. Choose an image or document from your device.
+4. PadiBase Studio automatically uploads the file, retrieves the URL, and **populates the text field automatically**.
+5. An inline image preview appears instantly.
 
-### Melalui REST API:
-#### Langkah 1: Unggah File ke Storage
+### Via REST API:
+#### Step 1: Upload File to Storage
 ```bash
 curl -X POST http://127.0.0.1:8085/api/storage/avatars \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -F "file=@/path/to/my_avatar.png"
 ```
-**Respons (200 OK):**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -83,7 +83,7 @@ curl -X POST http://127.0.0.1:8085/api/storage/avatars \
 }
 ```
 
-#### Langkah 2: Buat atau Perbarui Record dengan URL Tersebut
+#### Step 2: Create or Update Table Record with the File URL
 ```bash
 curl -X POST http://127.0.0.1:8085/api/users \
   -H "Authorization: Bearer <JWT_TOKEN>" \
@@ -96,63 +96,61 @@ curl -X POST http://127.0.0.1:8085/api/users \
 
 ---
 
-## 4. 🛡️ Keamanan: Sandbox XSS & Path Traversal Guard
+## 4. 🛡️ Security: XSS Sandbox & Path Traversal Guards
 
-PadiBase Storage dirancang dengan pertahanan berlapis:
+PadiBase Storage provides multiple layers of security:
 
 1. **Path Traversal Guard**:
-   - Setiap segmen nama bucket dan nama file divalidasi dengan `is_safe_segment()` dan path kanonikalisasi sistem operasi.
-   - Upaya injeksi `..`, pemisah path silang (`/`, `\`), dan karakter NUL (`\0`) ditolak secara instan dengan error `400 Bad Request`.
+   - Bucket names and filenames are validated with `is_safe_segment()` and canonicalization.
+   - `..`, directory separators (`/`, `\`), and NUL characters (`\0`) are immediately rejected with `400 Bad Request`.
 2. **XSS & Active Content Sandbox**:
-   - File dengan konten aktif yang berpotensi mengeksekusi skrip di browser (seperti `.html`, `.svg`, `.xml`, `.js`) dipaksa diunduh dengan header:
+   - Files with potentially executable contents (`.html`, `.svg`, `.xml`, `.js`) are forced to download with strict headers:
      ```http
      Content-Disposition: attachment; filename="..."
      Content-Security-Policy: default-src 'none'; sandbox
      X-Content-Type-Options: nosniff
      ```
-   - Ini mencegah serangan Stored XSS ketika pengguna mengunggah file SVG berbahaya.
+   - This prevents Stored Cross-Site Scripting (XSS) attacks when users upload malicious SVG files.
 
 ---
 
-## 5. 🧹 Siklus Hidup Zero Orphaned Files (Garbage Collection)
+## 5. 🧹 Zero Orphaned Files Lifecycle (Garbage Collection)
 
-Salah satu masalah terbesar penyimpanan media adalah menumpuknya file "yatim" (file yang sudah tidak dipakai tetapi tetap memakan memori disk).
-
-PadiBase menerapkan **Zero Orphaned Files Lifecycle**:
-- **Saat Record Dihapus**: Ketika Anda memanggil `DELETE /api/users/:id`, PadiBase secara otomatis mendeteksi URL file yang tersimpan pada kolom teks record tersebut dan menghapus file fisiknya dari folder `padi_data/storage/`.
-- **Saat URL File Diperbarui**: Jika record diperbarui dengan URL gambar baru melalui `PATCH /api/users/:id`, file gambar fisik lama yang sebelumnya terhubung akan otomatis dihapus dari disk.
+Unused "orphaned" files waste disk storage. PadiBase prevents this automatically:
+- **On Record Deletion**: When calling `DELETE /api/users/:id`, PadiBase identifies any file URLs stored in the record's text fields and removes the corresponding physical files from `./padi_data/storage/`.
+- **On File URL Updates**: When a record is updated with a new file URL via `PATCH /api/users/:id`, the old physical file is automatically pruned from disk.
 
 ---
 
-## 6. 💻 Contoh Penggunaan via SDK & REST API
+## 6. 💻 Usage Examples via SDK & REST API
 
-### Menggunakan PadiBase JS SDK:
+### Using PadiBase JS SDK:
 ```javascript
 import PadiBase from 'padibase';
 
 const padi = new PadiBase('http://127.0.0.1:8085');
 
-// 1. Upload file media ke bucket 'avatars'
+// 1. Upload media file to bucket 'avatars'
 const fileInput = document.querySelector('#avatarInput');
 const uploadResult = await padi.storage.upload('avatars', fileInput.files[0]);
 
-console.log('URL File:', uploadResult.url);
+console.log('File URL:', uploadResult.url);
 
-// 2. Simpan URL file ke record tabel
+// 2. Store URL into table record
 const profile = await padi.table('profiles').create({
   full_name: 'Siti Aminah',
   avatar_url: uploadResult.url
 });
 
-// 3. Tampilkan gambar di template frontend:
+// 3. Render image in frontend templates:
 // <img :src="profile.avatar_url" alt="Avatar" />
 ```
 
-### Mengambil atau Mengunduh File Langsung:
+### Direct HTTP File Serving:
 ```text
-# URL Standar (Inline preview di browser):
+# Standard URL (Inline browser preview):
 http://127.0.0.1:8085/api/storage/avatars/f1a2b3_my_avatar.png
 
-# Paksa Browser Mengunduh (Force Download):
+# Force Download:
 http://127.0.0.1:8085/api/storage/avatars/f1a2b3_my_avatar.png?download=1
 ```

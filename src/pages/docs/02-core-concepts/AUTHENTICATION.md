@@ -1,64 +1,64 @@
 # 🔐 Authentication & Identity Management
 
-**PadiBase Studio** mengusung arsitektur keamanan tingkat militer dengan algoritma hashing kata sandi **Argon2id**, token stateless **JSON Web Tokens (JWT)**, perlindungan brute-force rate-limiting, dan sistem **Auth Collections** mandiri yang menghasilkan rute autentikasi otomatis.
+**PadiBase Studio** features military-grade identity security powered by **Argon2id** password hashing, stateless **JSON Web Tokens (JWT)**, brute-force rate-limiting, and autonomous **Auth Collections** that generate complete authentication APIs automatically.
 
 ---
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [🛡️ Arsitektur Keamanan PadiBase](#1-arsitektur-keamanan-padibase)
+1. [🛡️ Security Architecture](#1-security-architecture)
 2. [👑 Superuser Gateway (/api/admins)](#2-superuser-gateway-apiadmins)
 3. [👥 Auth Collections (/api/collections/:authTable)](#3-auth-collections-apicollectionsauthtable)
-4. [🔑 Spesifikasi Endpoint Autentikasi](#4-spesifikasi-endpoint-autentikasi)
-5. [🔄 Rotasi Token & TokenKey Session Invalidation](#5-rotasi-token--tokenkey-session-invalidation)
-6. [🛡️ Perlindungan Brute-Force Rate Limiting](#6-perlindungan-brute-force-rate-limiting)
-7. [💻 Contoh Penggunaan via PadiBase JS SDK](#7-contoh-penggunaan-via-padibase-js-sdk)
+4. [🔑 Authentication Endpoints Specification](#4-authentication-endpoints-specification)
+5. [🔄 Token Rotation & TokenKey Session Revocation](#5-token-rotation--tokenkey-session-revocation)
+6. [🛡️ Brute-Force Rate Limiting Protection](#6-brute-force-rate-limiting-protection)
+7. [💻 Usage via PadiBase JS SDK](#7-usage-via-padibase-js-sdk)
 
 ---
 
-## 1. 🛡️ Arsitektur Keamanan PadiBase
+## 1. 🛡️ Security Architecture
 
-PadiBase membedakan otentikasi menjadi dua tingkat yang terisolasi:
+PadiBase cleanly separates identity into two distinct layers:
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        TINGKAT OTENTIKASI PADIBASE                     │
+│                      PADIBASE AUTHENTICATION LAYERS                    │
 ├───────────────────────────────────┬────────────────────────────────────┤
 │ 👑 Superuser Admin Gateway        │ 👥 User Auth Collections           │
 ├───────────────────────────────────┼────────────────────────────────────┤
-│ • Pengelola dashboard Studio      │ • Pengguna akhir / Member aplikasi │
-│ • Tersimpan di tabel `_admins`    │ • Dikelola per-tabel bertipe Auth  │
-│ • Akses penuh ke seluruh skema,   │ • Dibatasi oleh Access Rules &     │
-│   query builder, dan konfigurasi  │   proyeksi kolom per endpoint      │
+│ • Studio dashboard managers       │ • End users / application members  │
+│ • Stored in `_admins` table       │ • Configured per Auth collection   │
+│ • Full access to all schemas,     │ • Restricted by Access Rules &     │
+│   query tools, and settings       │   server-side field projections    │
 │ • Endpoint: `/api/admins/*`       │ • Endpoint: `/api/collections/*`   │
 └───────────────────────────────────┴────────────────────────────────────┘
 ```
 
-- **Argon2id Password Hashing**: Standar tertinggi pemenang Password Hashing Competition (PHC). Sangat kebal terhadap serangan GPU, FPGA, dan ASIC side-channel.
-- **Stateless Bearer JWT**: Token ditandatangani secara kriptografis menggunakan kunci rahasia HS256 (`JWT_SECRET`) minimal 32 karakter.
+- **Argon2id Password Hashing**: Winner of the Password Hashing Competition (PHC), resistant to GPU, FPGA, and ASIC-based attacks.
+- **Stateless Bearer JWT**: Cryptographically signed using HMAC SHA-256 (`JWT_SECRET`, min 32 characters).
 
 ---
 
 ## 2. 👑 Superuser Gateway (`/api/admins`)
 
-Digunakan untuk mengotentikasi pengelola PadiBase Studio di `http://127.0.0.1:8085/_padibase/`.
+Authenticates administrators accessing PadiBase Studio at `http://127.0.0.1:8085/_padibase/`.
 
-### Alur Bootstrap Admin Pertama:
-1. `GET /api/admins/has-admins`: Memeriksa apakah tabel `_admins` sudah memiliki data.
-2. `POST /api/admins/setup`: Hanya dapat dipanggil **satu kali** saat database masih bersih untuk mendaftarkan Superuser perdana.
-3. `POST /api/admins/auth-with-password`: Login Superuser dengan email dan password.
+### Bootstrap & Login Flow:
+1. `GET /api/admins/has-admins`: Checks if any admin exists in `_admins`.
+2. `POST /api/admins/setup`: One-time setup endpoint for the initial Superuser when the database is empty.
+3. `POST /api/admins/auth-with-password`: Authenticates superusers with email and password.
 
 ```bash
-# Login Superuser via curl:
+# Superuser login via curl:
 curl -X POST http://127.0.0.1:8085/api/admins/auth-with-password \
   -H "Content-Type: application/json" \
   -d '{
     "identity": "admin@padibase.dev",
-    "password": "password_rahasia_123"
+    "password": "secure_password_123"
   }'
 ```
 
-**Respons (200 OK):**
+**Response (200 OK):**
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -74,126 +74,126 @@ curl -X POST http://127.0.0.1:8085/api/admins/auth-with-password \
 
 ## 3. 👥 Auth Collections (`/api/collections/:authTable`)
 
-Ketika Anda membuat tabel bertipe **Auth Collection** di Studio (misalnya tabel `users`, `members`, atau `customers`), PadiBase secara otomatis menyematkan kolom-kolom kredensial dan memvalidasi keamanannya:
+When you create an **Auth Collection** in Studio (e.g., `users`, `members`, `customers`), PadiBase automatically configures credential columns:
 
-- `email`: Alamat email unik tervalidasi.
-- `username`: Nama pengguna unik opsional.
-- `passwordHash`: Hash Argon2id dari kata sandi pengguna (tidak pernah bocor ke respons API).
-- `tokenKey`: Kunci 32 karakter acak yang disematkan ke payload token JWT.
-- `role`: Peran otorisasi pengguna (`user`, `admin`, `manager`, dll).
-- `status`: Status keaktifan akun (`active`, `pending`, `banned`).
-- `verified`: Boolean penanda status verifikasi email.
-- `email_verified_at`: Waktu verifikasi email berhasil.
+- `email`: Unique, validated email address.
+- `username`: Optional unique username.
+- `passwordHash`: Argon2id password hash (never returned in API responses).
+- `tokenKey`: 32-character random key embedded into JWT token claims.
+- `role`: Authorization role (`user`, `admin`, `manager`, etc.).
+- `status`: Account status (`active`, `pending`, `banned`).
+- `verified`: Boolean indicating email verification status.
+- `email_verified_at`: Timestamp of email verification.
 
 ---
 
-## 4. 🔑 Spesifikasi Endpoint Autentikasi
+## 4. 🔑 Authentication Endpoints Specification
 
-Setiap tabel Auth Collection otomatis mengekspos endpoint-endpoint berikut:
+Every Auth Collection automatically provides the following endpoints:
 
-### 1. Registrasi Akun Baru
+### 1. Account Registration
 `POST /api/collections/:authTable/register`
 ```json
 {
   "email": "budi@example.com",
   "username": "budisantoso",
-  "password": "PasswordAman123!",
-  "passwordConfirm": "PasswordAman123!"
+  "password": "SecurePassword123!",
+  "passwordConfirm": "SecurePassword123!"
 }
 ```
 
-### 2. Login dengan Password
+### 2. Password Login
 `POST /api/collections/:authTable/auth-with-password`
 ```json
 {
   "identity": "budi@example.com",
-  "password": "PasswordAman123!"
+  "password": "SecurePassword123!"
 }
 ```
-Field `identity` dapat menerima alamat `email` maupun `username`.
+The `identity` field accepts either an `email` or a `username`.
 
-### 3. Refresh Token JWT
+### 3. Refresh Active JWT Token
 `POST /api/collections/:authTable/auth-refresh`
-Kirimkan header `Authorization: Bearer <TOKEN_LAMA>` untuk mendapatkan token baru yang segar.
+Include header `Authorization: Bearer <TOKEN>` to receive a fresh token.
 
-### 4. Permintaan Reset Password
+### 4. Request Password Reset
 `POST /api/collections/:authTable/request-password-reset`
 ```json
 {
   "email": "budi@example.com"
 }
 ```
-PadiBase akan mengirimkan email berisi token reset password aman melalui server SMTP yang dikonfigurasi di Settings.
+Sends a password reset token to the user's email via the configured SMTP server.
 
-### 5. Konfirmasi Reset Password
+### 5. Confirm Password Reset
 `POST /api/collections/:authTable/confirm-password-reset`
 ```json
 {
-  "token": "reset_token_dari_email",
-  "password": "PasswordBaru456!",
-  "passwordConfirm": "PasswordBaru456!"
+  "token": "reset_token_from_email",
+  "password": "NewSecurePassword456!",
+  "passwordConfirm": "NewSecurePassword456!"
 }
 ```
 
-### 6. Ganti Password Pengguna yang Sedang Login
+### 6. Change Password (Authenticated User)
 `POST /api/collections/:authTable/change-password`
 ```json
 {
-  "oldPassword": "PasswordAman123!",
-  "newPassword": "PasswordBaruBaru789!",
-  "newPasswordConfirm": "PasswordBaruBaru789!"
+  "oldPassword": "SecurePassword123!",
+  "newPassword": "NewSecurePassword456!",
+  "newPasswordConfirm": "NewSecurePassword456!"
 }
 ```
 
-### 7. Permintaan & Konfirmasi Verifikasi Email
-- `POST /api/collections/:authTable/request-verification`: Mengirim email verifikasi akun.
-- `POST /api/collections/:authTable/confirm-verification`: Mengonfirmasi token verifikasi email.
+### 7. Request & Confirm Email Verification
+- `POST /api/collections/:authTable/request-verification`: Sends account verification email.
+- `POST /api/collections/:authTable/confirm-verification`: Confirms verification token.
 
-### 8. Ambil Profil Pengguna Aktif
+### 8. Fetch Current Authenticated Profile
 `GET /api/collections/:authTable/me`
 Header: `Authorization: Bearer <TOKEN>`
 
 ---
 
-## 5. 🔄 Rotasi Token & TokenKey Session Invalidation
+## 5. 🔄 Token Rotation & TokenKey Session Revocation
 
-PadiBase menyematkan field `tokenKey` ke dalam klaim JWT pengguna. 
-Ketika pengguna:
-1. Mengubah kata sandinya (`change-password`), atau
-2. Melakukan reset password (`confirm-password-reset`),
+PadiBase embeds the `tokenKey` column into JWT claims.
+Whenever a user:
+1. Changes their password (`change-password`), or
+2. Confirms a password reset (`confirm-password-reset`),
 
-PadiBase secara otomatis **meregenerasi nilai `tokenKey`** di database. Akibatnya, seluruh token JWT lama yang beredar di perangkat lain **langsung tidak valid dan tertolak seketika**, mencegah sesi curian disalahgunakan.
-
----
-
-## 6. 🛡️ Perlindungan Brute-Force Rate Limiting
-
-PadiBase secara otomatis mengaktifkan filter **Rate Limiting sensitif otentikasi**:
-- Rute-rute login, verifikasi, registrasi, dan perubahan password secara ketat dibatasi jumlah percobaannya per alamat IP klien.
-- Upaya tebakan kata sandi berulang akan diblokir dengan respons `429 Too Many Requests`.
+PadiBase automatically **regenerates the user's `tokenKey`** in the database. As a result, all previously issued JWT tokens on other devices **become invalid immediately**, thwarting session hijacking attempts.
 
 ---
 
-## 7. 💻 Contoh Penggunaan via PadiBase JS SDK
+## 6. 🛡️ Brute-Force Rate Limiting Protection
+
+PadiBase enforces built-in **sensitive-path rate limiting**:
+- Login, registration, verification, and password change routes are strictly throttled per client IP address.
+- Repeated brute-force attempts are blocked with `429 Too Many Requests`.
+
+---
+
+## 7. 💻 Usage via PadiBase JS SDK
 
 ```javascript
 import PadiBase from 'padibase';
 
 const padi = new PadiBase('http://127.0.0.1:8085');
 
-// 1. Login pengguna
-const authData = await padi.collection('users').authWithPassword('budi@example.com', 'PasswordAman123!');
-console.log('Login berhasil! Token:', authData.token);
-console.log('User Profile:', authData.record);
+// 1. User login
+const authData = await padi.collection('users').authWithPassword('budi@example.com', 'SecurePassword123!');
+console.log('Login successful! Token:', authData.token);
+console.log('User profile:', authData.record);
 
-// Token otomatis tersimpan di padi.authStore dan disematkan ke setiap request berikutnya!
+// The token is automatically saved into padi.authStore and attached to all future requests!
 
-// 2. Ambil profil user saat ini:
+// 2. Fetch current user profile:
 const me = await padi.collection('users').getProfile();
-console.log('Profil saya:', me);
+console.log('My profile:', me);
 
-// 3. Ganti kata sandi:
-await padi.collection('users').changePassword('PasswordAman123!', 'PasswordBaruBaru789!');
+// 3. Change password:
+await padi.collection('users').changePassword('SecurePassword123!', 'NewPassword456!');
 
 // 4. Logout:
 padi.authStore.clear();

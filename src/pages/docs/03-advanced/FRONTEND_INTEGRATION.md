@@ -1,36 +1,36 @@
 # 📱 Frontend Integration & PadiBase JS/TS SDK
 
-Pustaka resmi **PadiBase JavaScript / TypeScript SDK** (`padi_js_sdk`) menyediakan antarmuka klien zero-dependency yang cepat, terstruktur, dan sepenuhnya kompatibel dengan **Vue 3, Nuxt, React, Next.js, Svelte, Angular, dan Node.js**.
+The official **PadiBase JavaScript / TypeScript SDK** (`padibase`) provides a fast, zero-dependency client that is fully compatible with **Vue 3, Nuxt, React, Next.js, Svelte, Angular, and Node.js**.
 
 ---
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [📦 Instalasi & Setup Singleton](#1-instalasi--setup-singleton)
-2. [🔐 Autentikasi Pengguna & AuthStore](#2-autentikasi-pengguna--authstore)
-3. [📊 Operasi CRUD Tabel & Record](#3-operasi-crud-tabel--record)
-4. [📁 Upload Media Terpisah (Decoupled Storage)](#4-upload-media-terpisah-decoupled-storage)
-5. [⚡ Operasi Batch: Create & Delete Massal](#5-operasi-batch-create--delete-massal)
-6. [📡 Langganan Realtime SSE Stream](#6-langganan-realtime-sse-stream)
-7. [🛠️ Custom Dynamic SQL & Transaksi Atomik](#7-custom-dynamic-sql--transaksi-atomik)
-8. [💚 Contoh Komponen Vue 3 & React](#8-contoh-komponen-vue-3--react)
+1. [📦 Installation & Singleton Setup](#1-installation--singleton-setup)
+2. [🔐 User Authentication & AuthStore](#2-user-authentication--authstore)
+3. [📊 Table & Record CRUD Operations](#3-table--record-crud-operations)
+4. [📁 Decoupled Media Uploads](#4-decoupled-media-uploads)
+5. [⚡ Batch Operations: Mass Create & Delete](#5-batch-operations-mass-create--delete)
+6. [📡 Realtime SSE Stream Subscriptions](#6-realtime-sse-stream-subscriptions)
+7. [🛠️ Custom Dynamic SQL & Atomic Transactions](#7-custom-dynamic-sql--atomic-transactions)
+8. [💚 Vue 3 & React Component Examples](#8-vue-3--react-component-examples)
 
 ---
 
-## 1. 📦 Instalasi & Setup Singleton
+## 1. 📦 Installation & Singleton Setup
 
-### Instalasi Paket
+### Package Installation
 ```bash
-# Menggunakan npm:
+# Using npm:
 npm install padibase
 
-# Atau menggunakan pnpm / yarn:
+# Using pnpm or yarn:
 pnpm add padibase
 yarn add padibase
 ```
 
-### Inisialisasi Singleton Client (`src/lib/padi.js` atau `padi.ts`)
-Buat satu instance singleton terpusat untuk dipakai di seluruh komponen:
+### Initializing the Client Singleton (`src/lib/padi.js` or `padi.ts`)
+Create a single centralized instance to share across your application:
 
 ```javascript
 // src/lib/padi.js
@@ -45,42 +45,42 @@ export default padi;
 
 ---
 
-## 2. 🔐 Autentikasi Pengguna & AuthStore
+## 2. 🔐 User Authentication & AuthStore
 
-PadiBase SDK mengelola status token JWT dan profil pengguna secara reaktif via `padi.authStore`:
+The SDK reactively manages JWT tokens and user profile state via `padi.authStore`:
 
 ```javascript
 import { padi } from '@/lib/padi';
 
-// 1. Login dengan Email/Username + Password pada Auth Table (misal: 'users')
-const authData = await padi.collection('users').authWithPassword('budi@example.com', 'PasswordAman123!');
-console.log('Login berhasil:', authData.record);
-console.log('Token JWT:', authData.token);
+// 1. Login with Email or Username + Password on an Auth Table (e.g. 'users')
+const authData = await padi.collection('users').authWithPassword('budi@example.com', 'SecurePassword123!');
+console.log('Login successful:', authData.record);
+console.log('JWT Token:', authData.token);
 
-// 2. Registrasi akun pengguna baru
+// 2. Register a new user account
 await padi.collection('users').register({
   email: 'siti@example.com',
   username: 'sitiaminah',
-  password: 'PasswordRahasia123!',
-  passwordConfirm: 'PasswordRahasia123!'
+  password: 'SecurePassword123!',
+  passwordConfirm: 'SecurePassword123!'
 });
 
-// 3. Cek apakah pengguna saat ini sedang login:
+// 3. Check if user is currently authenticated:
 if (padi.authStore.isValid) {
-  console.log('User aktif:', padi.authStore.model);
+  console.log('Active user:', padi.authStore.model);
 }
 
-// 4. Dengarkan perubahan status otentikasi secara reaktif:
+// 4. Listen reactively to authentication state changes:
 padi.authStore.onChange((token, model) => {
-  console.log('Status auth berubah. User:', model);
+  console.log('Auth state changed. User:', model);
 });
 
-// 5. Ganti kata sandi:
-await padi.collection('users').changePassword('PasswordLama123!', 'PasswordBaru456!');
+// 5. Change password:
+await padi.collection('users').changePassword('OldPassword123!', 'NewPassword456!');
 
-// 6. Alur Lupa & Reset Password:
+// 6. Password reset flow:
 await padi.collection('users').requestPasswordReset('budi@example.com');
-await padi.collection('users').confirmPasswordReset('token_dari_email', 'PasswordBaruBaru!');
+await padi.collection('users').confirmPasswordReset('token_from_email', 'BrandNewPassword123!');
 
 // 7. Logout:
 padi.authStore.clear();
@@ -88,95 +88,95 @@ padi.authStore.clear();
 
 ---
 
-## 3. 📊 Operasi CRUD Tabel & Record
+## 3. 📊 Table & Record CRUD Operations
 
 ```javascript
-// 1. Ambil data terpaginasi (Relasi foreign key 2-tingkat auto-load tanpa N+1)
+// 1. Fetch paginated records (2-level foreign keys auto-loaded with zero N+1)
 const result = await padi.table('posts').getList(1, 20, {
   sort: '-created_at',
   filter: 'status = "published"'
 });
-console.log('Daftar data:', result.items);
-console.log('Total baris:', result.totalItems);
-console.log('Total halaman:', result.totalPages);
+console.log('Items:', result.items);
+console.log('Total items:', result.totalItems);
+console.log('Total pages:', result.totalPages);
 
-// 2. Ambil 1 record pertama yang cocok:
-const firstPost = await padi.table('posts').getFirstListItem('slug = "halo-dunia"');
+// 2. Fetch first matching record:
+const firstPost = await padi.table('posts').getFirstListItem('slug = "hello-world"');
 
-// 3. Hitung jumlah total record yang cocok dengan filter:
-const totalPublished = await padi.table('posts').getCount('status = "published"');
+// 3. Count matching records:
+const count = await padi.table('posts').getCount('status = "published"');
 
-// 4. Ambil 1 data berdasarkan ID:
+// 4. Fetch single record by ID:
 const post = await padi.table('posts').getOne(42);
 
-// 5. Tambah record baru:
+// 5. Create new record:
 const created = await padi.table('posts').create({
-  title: 'Tutorial PadiBase Lengkap',
-  slug: 'tutorial-padibase-lengkap',
-  content: 'Belajar BaaS modern dengan Rust.'
+  title: 'Complete PadiBase Tutorial',
+  slug: 'complete-padibase-tutorial',
+  content: 'Building modern web apps with PadiBase BaaS.'
 });
 
-// 6. Perbarui data (Partial update):
+// 6. Partial update:
 await padi.table('posts').update(created.id, {
-  title: 'Tutorial PadiBase Lengkap (Revisi)'
+  title: 'Complete PadiBase Tutorial (Updated)'
 });
 
-// 7. Hapus data:
+// 7. Delete record:
 await padi.table('posts').delete(created.id);
 ```
 
 ---
 
-## 4. 📁 Upload Media Terpisah (Decoupled Storage)
+## 4. 📁 Decoupled Media Uploads
 
 > [!NOTE]
-> Ingat bahwa tabel PadiBase tidak memiliki kolom bertipe `FILE`. Unggah file ke Storage, lalu simpan URL yang dikembalikan ke kolom bertipe `TEXT`:
+> PadiBase tables do not have `FILE` columns. Upload files to Storage, then save the returned URL into a standard `TEXT` column:
 
 ```javascript
-// Langkah 1: Unggah file ke Storage Explorer (bucket 'avatars')
+// Step 1: Upload media file to Storage Explorer (bucket 'avatars')
 const fileInput = document.getElementById('userAvatarInput');
 const uploadResult = await padi.storage.upload('avatars', fileInput.files[0]);
 
-console.log('File berhasil diunggah! URL:', uploadResult.url);
+console.log('Upload successful! File URL:', uploadResult.url);
 
-// Langkah 2: Simpan URL tersebut ke kolom avatar_url di tabel pengguna
+// Step 2: Save the URL into the avatar_url text field in the user profile table
 await padi.table('profiles').create({
   user_id: padi.authStore.model.id,
   full_name: 'Budi Santoso',
-  avatar_url: uploadResult.url // URL file disimpan di kolom teks
+  avatar_url: uploadResult.url // File URL stored in TEXT column
 });
 ```
 
 ---
 
-## 5. ⚡ Operasi Batch: Create & Delete Massal
+## 5. ⚡ Batch Operations: Mass Create & Delete
 
 ```javascript
-// Batch Create banyak record sekaligus dalam satu transaksi atomik:
+// Batch Create multiple records in a single atomic transaction:
 const batchItems = [
-  { name: 'Kategori Tech', slug: 'tech' },
-  { name: 'Kategori Desain', slug: 'design' },
-  { name: 'Kategori Bisnis', slug: 'business' }
+  { name: 'Tech Category', slug: 'tech' },
+  { name: 'Design Category', slug: 'design' },
+  { name: 'Business Category', slug: 'business' }
 ];
 
 const batchCreateResult = await padi.table('categories').createBatch(batchItems);
-console.log('Record berhasil dibuat:', batchCreateResult);
+console.log('Batch created:', batchCreateResult);
 
-// Batch Delete banyak ID sekaligus:
+// Batch Delete multiple IDs in a single request:
 await padi.table('categories').deleteBatch([1, 2, 3]);
 ```
 
 ---
 
-## 6. 📡 Langganan Realtime SSE Stream
+## 6. 📡 Realtime SSE Stream Subscriptions
 
-PadiBase SDK secara otomatis menghubungkan koneksi Server-Sent Events (`/api/realtime`) dengan penanganan rekoneksi cerdas:
+The SDK automatically maintains an SSE connection to `/api/realtime` with auto-reconnection:
 
 ```javascript
-// Berlangganan seluruh aksi pada tabel 'posts' (* = create, update, delete)
+// Subscribe to all mutation events (* = create, update, delete) on table 'posts'
 const unsubscribe = padi.table('posts').subscribe('*', (e) => {
-  console.log('Event Realtime:', e.action); // 'create' | 'update' | 'delete'
-  console.log('Data Record:', e.record);
+  console.log('Realtime action:', e.action); // 'create' | 'update' | 'delete'
+  console.log('Record data:', e.record);
 
   if (e.action === 'create') {
     postsList.value.unshift(e.record);
@@ -188,27 +188,27 @@ const unsubscribe = padi.table('posts').subscribe('*', (e) => {
   }
 });
 
-// Untuk berhenti berlangganan saat komponen di-unmount:
+// To unsubscribe:
 // unsubscribe();
 ```
 
 ---
 
-## 7. 🛠️ Custom Dynamic SQL & Transaksi Atomik
+## 7. 🛠️ Custom Dynamic SQL & Atomic Transactions
 
-### Memanggil Custom Dynamic SQL Endpoint:
+### Calling a Custom Dynamic SQL Endpoint:
 ```javascript
-// Memanggil endpoint custom yang dibuat di menu API Config:
+// Invoking custom endpoints created via API Config:
 const stats = await padi.custom.get('monthly-revenue', {
   start_date: '2026-01-01',
   limit: 10
 });
-console.log('Laporan statistik:', stats);
+console.log('Report analytics:', stats);
 ```
 
-### Menjalankan Transaksi Atomik Multi-Tabel:
+### Multi-Table Atomic ACID Transactions:
 ```javascript
-// Eksekusi mutasi multi-tabel dengan jaminan ACID (BEGIN ... COMMIT)
+// Execute multi-table operations with ACID guarantees (BEGIN ... COMMIT)
 const result = await padi.transaction([
   {
     table: 'orders',
@@ -222,22 +222,22 @@ const result = await padi.transaction([
     data: { balance: 350000 }
   }
 ]);
-console.log('Transaksi berhasil!');
+console.log('Transaction executed successfully!');
 ```
 
 ---
 
-## 8. 💚 Contoh Komponen Vue 3 & React
+## 8. 💚 Vue 3 & React Component Examples
 
-### Komponen Vue 3 (Composition API `<script setup>`)
+### Vue 3 (`<script setup>`)
 ```vue
 <template>
   <div class="posts-container">
-    <h2>Daftar Artikel Live</h2>
+    <h2>Live Posts Stream</h2>
     <div v-for="post in posts" :key="post.id" class="post-card">
       <img v-if="post.cover_url" :src="post.cover_url" class="post-cover" />
       <h3>{{ post.title }}</h3>
-      <p>Penulis: {{ post.user?.name || 'Anonim' }}</p>
+      <p>Author: {{ post.user?.name || 'Anonymous' }}</p>
     </div>
   </div>
 </template>
@@ -250,11 +250,11 @@ const posts = ref([]);
 let unsubscribe = null;
 
 onMounted(async () => {
-  // 1. Ambil data awal
+  // 1. Initial fetch
   const res = await padi.table('posts').getList(1, 10, { sort: '-created_at' });
   posts.value = res.items;
 
-  // 2. Langganan realtime SSE untuk update live
+  // 2. Realtime SSE subscription
   unsubscribe = padi.table('posts').subscribe('*', (e) => {
     if (e.action === 'create') posts.value.unshift(e.record);
   });

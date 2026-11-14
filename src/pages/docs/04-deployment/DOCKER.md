@@ -1,79 +1,49 @@
-# 🐳 Docker Deployment Guide
+# 🐳 Docker Deployment Guide — PadiBase Studio
 
-Deploying Padi Rust applications with Docker results in ultra-compact, high-performance container images using multi-stage builds.
+Deploying **PadiBase Studio** with Docker uses the pre-built single binary, resulting in an ultra-compact (~30MB) container image that boots instantly without requiring Rust or build tools inside the container.
 
 ---
 
 ## 📄 Dockerfile
 
 ```dockerfile
-# Stage 1: Build the Rust release binary
-FROM rust:1.75-bullseye AS builder
-
-WORKDIR /app
-
-# Cache dependencies
-COPY Cargo.toml Cargo.lock ./
-# Create dummy main to compile dependencies first
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
-RUN rm -rf src
-
-# Copy real source code and migrations
-COPY src ./src
-COPY database ./database
-
-# Build release binary (updates real src)
-RUN touch src/main.rs && cargo build --release
-
-# Stage 2: Minimal runtime image
 FROM debian:bullseye-slim
 
-RUN apt-get update && apt-get install -y ca-certificates libssl-dev tzdata && rm -rf /var/lib/apt/lists/*
+# Install root SSL certificates and timezone data:
+RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/padi_rust /app/padi_rust
-COPY --from=builder /app/database /app/database
-COPY .env.example /app/.env
+# Copy the pre-built padibase binary:
+COPY padibase /app/padibase
+RUN chmod +x /app/padibase
 
-EXPOSE 8080
+# Expose PadiBase Studio HTTP port:
+EXPOSE 8085
 
-CMD ["./padi_rust", "serve"]
+# Persistent volume for SQLite database and file storage:
+VOLUME ["/app/padi_data"]
+
+# Run the server:
+CMD ["./padibase", "serve", "--http", "0.0.0.0:8085", "--dir", "/app/padi_data"]
 ```
 
 ---
 
-## 📄 docker-compose.yml
+## 🚀 Building & Running the Container
 
-```yaml
-version: '3.8'
+```bash
+# 1. Build the lightweight image:
+docker build -t padibase-app .
 
-services:
-  api:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - APP_ENV=production
-      - APP_PORT=8080
-      - DB_DRIVER=pgsql
-      - DATABASE_URL=postgres://padi_user:secret@postgres:5432/padi_db
-      - JWT_SECRET=change-this-to-a-cryptographically-secure-32-character-secret
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: padi_db
-      POSTGRES_USER: padi_user
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  pgdata:
+# 2. Run container with persistent data volume:
+docker run -d \
+  --name padibase \
+  -p 8085:8085 \
+  -v padibase_data:/app/padi_data \
+  --restart unless-stopped \
+  padibase-app
 ```
+
+The PadiBase Studio Dashboard is immediately accessible at:
+👉 **`http://localhost:8085/_padibase/`**

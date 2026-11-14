@@ -204,7 +204,7 @@ export default {
         title: 'Launch PadiBase Server & Bootstrap First Admin',
         desc: 'Start the PadiBase standalone binary in seconds with embedded SQLite or PostgreSQL/MySQL, then bootstrap your superuser account.',
         instructions: [
-          'Run the server in terminal: `cargo run --release -- serve --http 127.0.0.1:8085` (or run `./padibase.exe serve`).',
+          'Run the pre-built PadiBase binary: `./padibase serve --http 127.0.0.1:8085` (on Windows: `padibase.exe serve` or double-click `init_backend.bat`).',
           'Open your browser and navigate to Studio: `http://127.0.0.1:8085/_padibase/`.',
           'On first visit, the system presents the "Create First Superuser" wizard because no admins exist yet in the database (_admins).',
           'Enter admin Email and Password (min 8 characters), then click "Create & Login". You can also create an admin via CLI: `padibase admin create admin@example.com "password123"`.',

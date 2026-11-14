@@ -1,41 +1,39 @@
-# 📦 Installation Guide — PadiBase Studio
+# 📦 Installation & Binary Execution — PadiBase Studio
 
-**PadiBase Studio** is distributed as a single high-performance executable binary with an embedded web management dashboard (`/_padibase/`).
+**PadiBase Studio** is distributed as a **single, self-contained executable binary** with the embedded Studio web dashboard (`/_padibase/`). **No compilation, SDKs, or external runtimes are required.**
 
 ---
 
 ## 📋 System Requirements
 
-- **Rust 1.75+ (2021 Edition)** with `cargo` (for building from source)
-- **Database Engine (One of the following):**
-  - **SQLite** (Default — embedded WAL mode via SQLx in `./padi_data`, zero configuration needed)
+- **Operating System:**
+  - Windows (x64)
+  - Linux (x64 / ARM64)
+  - macOS (x64 / Apple Silicon ARM)
+- **Database (One of the following):**
+  - **SQLite** (Default — embedded high-performance WAL mode in `./padi_data`, zero configuration needed)
   - **PostgreSQL 12+**
   - **MySQL / MariaDB 5.7+ / 8.0+**
 
 ---
 
-## 🛠️ Step-by-Step Installation
+## 🛠️ Running the Pre-built Binary
 
-### 1. Run via Prebuilt Binary
-```bash
-# Windows
-./padibase.exe serve --http 127.0.0.1:8085 --dir ./padi_data
-
-# Linux / macOS
-./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
+### 1. Windows
+Open PowerShell or Command Prompt in the directory containing `padibase.exe`:
+```cmd
+padibase.exe serve --http 127.0.0.1:8085 --dir ./padi_data
 ```
-
-### 2. Build from Source via Cargo
-```bash
-cd padiBase
-
-# Release build & run:
-cargo run --release -- serve --http 127.0.0.1:8085 --dir ./padi_data
-```
-
-Or run the convenient batch script on Windows:
+Or simply double-click:
 ```cmd
 init_backend.bat
+```
+
+### 2. Linux / macOS
+Make the binary executable if necessary and launch it:
+```bash
+chmod +x ./padibase
+./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
 ```
 
 ---
@@ -46,13 +44,13 @@ You can connect directly to PostgreSQL, MySQL, or MariaDB using the `--db-url` f
 
 ```bash
 # PostgreSQL
-cargo run --release -- serve --db-url "postgres://postgres:password@127.0.0.1:5432/padibase"
+./padibase serve --db-url "postgres://postgres:password@127.0.0.1:5432/padibase"
 
 # MySQL / MariaDB
-cargo run --release -- serve --db-url "mysql://root:secret@127.0.0.1:3306/padibase"
+./padibase serve --db-url "mysql://root:secret@127.0.0.1:3306/padibase"
 ```
 
-Sample `.env` file:
+Sample `.env` file placed next to the binary:
 ```env
 APP_ENV=development
 APP_HOST=127.0.0.1
@@ -79,9 +77,9 @@ Once the server is running:
 2. The system detects if any admin exists. If not, the **"Create First Superuser"** wizard is displayed.
 3. Enter your Email and Password (min 8 characters) to log in.
 
-You can also create an admin via CLI:
+You can also create an admin via the binary CLI:
 ```bash
-cargo run -- admin create admin@example.com "my_secure_password_123"
+./padibase admin create admin@example.com "my_secure_password_123"
 ```
 
 ---
@@ -90,5 +88,5 @@ cargo run -- admin create admin@example.com "my_secure_password_123"
 
 Generate ready-to-import API collections for Postman, Insomnia, Thunder Client, Bruno, or VS Code REST Client:
 ```bash
-cargo run -- api-collection --force
+./padibase api-collection --force
 ```

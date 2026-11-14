@@ -6,12 +6,11 @@ Guidelines for running Padi Rust Framework in mission-critical production enviro
 
 ## 📋 Checklist
 
-1. **Compilation Optimization**:
-   Build the optimized standalone binary with Cargo:
+1. **Standalone Binary**:
+   Copy the pre-compiled `padibase` binary to your production server directory:
    ```bash
-   cargo build --release
+   ./padibase serve --http 127.0.0.1:8085 --dir ./padi_data
    ```
-   The binary is generated at `target/release/padi_rust`.
 
 2. **Environment Variables**:
    - Set `APP_ENV=production`.

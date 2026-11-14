@@ -156,62 +156,32 @@ const mdModules = import.meta.glob('./docs/**/*.md', { query: '?raw', import: 'd
 
 const iconMap = {
   // Getting Started
-  'INTRODUCTION.md': 'rocket_launch',
   'QUICK_START.md': 'bolt',
-  'INSTALLATION.md': 'settings_remote',
-  'SETUP_METHODS.md': 'account_tree',
   'FIRST_STEPS.md': 'directions_walk',
+  'INSTALLATION.md': 'settings_remote',
   'CONFIGURATION.md': 'display_settings',
-  'INIT_APP_GUIDE.md': 'auto_awesome',
-  'INIT_APP_TROUBLESHOOTING.md': 'moped',
 
   // Core Concepts
   'TABLES_AND_COLLECTIONS.md': 'table_chart',
-  'ROUTING.md': 'hub',
-  'CONTROLLERS.md': 'gamepad',
-  'MODELS.md': 'rebase_edit',
-  'ACTIVE_RECORD.md': 'dataset',
-  'REQUEST.md': 'login',
-  'RESPONSE.md': 'logout',
   'AUTHENTICATION.md': 'vpn_key',
-  'DATABASE.md': 'settings_input_component',
-  'MIGRATIONS.md': 'dynamic_feed',
-  'VALIDATION.md': 'verified_user',
-  'QUERY_BUILDER.md': 'manage_search',
-  'CACHE.md': 'cached',
-  'EMAIL.md': 'send_time_extension',
-  'LOGGER.md': 'article',
   'FILE_UPLOAD.md': 'upload_file',
-  'MIDDLEWARE.md': 'filter_alt',
+  'QUERY_BUILDER.md': 'manage_search',
   'RBAC.md': 'badge',
-  'RESOURCES.md': 'inventory',
-  'RESPONSE_STRUCTURE.md': 'schema',
-  'USER_MODEL.md': 'account_circle',
 
   // Advanced
-  'SECURITY.md': 'security',
-  'REALTIME.md': 'sensors',
-  'CACHING.md': 'timer',
-  'QUEUE.md': 'playlist_add_check',
-  'CLI_INTERFACE.md': 'terminal',
-  'FRONTEND_INTEGRATION.md': 'devices',
-  'API_TESTING.md': 'rule_folder',
-  'MULTI_DATABASE.md': 'storage',
-  'FILE_STORAGE.md': 'folder_shared',
-  'MAILER.md': 'alternate_email',
   'API_COLLECTION_GUIDE.md': 'collections_bookmark',
-  'CORS.md': 'language',
-  'ERROR_HANDLING.md': 'report_problem',
-  'PAGINATION.md': 'last_page',
-  'PASSWORD_RESET.md': 'lock_reset',
+  'FRONTEND_INTEGRATION.md': 'devices',
+  'MULTI_DATABASE.md': 'storage',
+  'REALTIME.md': 'sensors',
+  'SECURITY.md': 'security',
 
   // Deployment
-  'PRODUCTION.md': 'running_with_errors',
   'DOCKER.md': 'anchor',
+  'PRODUCTION.md': 'running_with_errors',
   'PERFORMANCE.md': 'speed',
   'TROUBLESHOOTING.md': 'help_center',
 
-  // Default
+  // Default / Meta
   'INDEX.md': 'dashboard',
   'CHANGE_LOG.md': 'history',
 }
@@ -222,7 +192,6 @@ const categoryOrder = [
   'core concepts',
   'advanced',
   'deployment',
-  'examples',
   'releases',
 ]
 
@@ -232,52 +201,27 @@ const explicitOrder = [
 
   // Getting Started
   'quick start',
+  'first steps',
   'installation',
   'configuration',
-  'first steps',
-  'setup methods',
-  'init app guide',
-  'init app troubleshooting',
 
   // Core Concepts
   'tables and collections',
-  'cli interface',
   'authentication',
-  'rbac',
-  'models',
-  'controllers',
-  'routing',
-  'middleware',
-  'response structure',
-  'resources',
-  'email',
-  'queue',
-  'cache',
-  'logger',
   'file upload',
-  'database',
   'query builder',
-  'active record',
-  'user model',
+  'rbac',
 
   // Advanced
-  'error handling',
-  'security',
-  'realtime',
-  'caching',
-  'frontend integration',
-  'api testing',
-  'multi database',
-  'file storage',
-  'mailer',
   'api collection guide',
-  'cors',
-  'pagination',
-  'password reset',
+  'frontend integration',
+  'multi database',
+  'realtime',
+  'security',
 
   // Deployment
-  'production',
   'docker',
+  'production',
   'performance',
   'troubleshooting',
 

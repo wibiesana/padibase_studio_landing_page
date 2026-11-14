@@ -1,70 +1,70 @@
 # ⚡ API Config, Custom Dynamic SQL & Postman Export
 
-Menu **API Config / Endpoints** (`/_padibase/endpoints`) di PadiBase Studio adalah pusat kendali untuk meninjau seluruh rute REST API yang aktif, merancang **Custom Dynamic SQL Endpoints**, menjadwalkan tugas **Cron**, serta mengekspor seluruh spesifikasi API ke format **Postman Collection v2.1.0** dalam 1 klik.
+The **API Config / Endpoints** workspace (`/_padibase/endpoints`) in PadiBase Studio serves as the command center for inspecting active REST API routes, creating **Custom Dynamic SQL Endpoints**, scheduling background **Cron Tasks**, and exporting your API specification to **Postman Collection v2.1.0** format in a single click.
 
 ---
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [🧭 Tinjauan Menu API Config & Endpoints](#1-tinjauan-menu-api-config--endpoints)
+1. [🧭 Workspace Overview](#1-workspace-overview)
 2. [📡 Live Auto-Generated REST Endpoints](#2-live-auto-generated-rest-endpoints)
 3. [🛠️ Custom Dynamic SQL Endpoints (/api/custom/*)](#3-custom-dynamic-sql-endpoints-apicustom)
 4. [⏰ Background Cron Tasks & Scheduled SQL](#4-background-cron-tasks--scheduled-sql)
-5. [📑 1-Click Postman Collection v2.1.0 Exporter](#5-1-klik-postman-collection-v210-exporter)
-6. [🚀 Panduan Impor ke Postman, Insomnia & Bruno](#6-panduan-impor-ke-postman-insomnia--bruno)
+5. [📑 1-Click Postman Collection v2.1.0 Exporter](#5-1-click-postman-collection-v210-exporter)
+6. [🚀 Importing into Postman, Insomnia & Bruno](#6-importing-into-postman-insomnia--bruno)
 
 ---
 
-## 1. 🧭 Tinjauan Menu API Config & Endpoints
+## 1. 🧭 Workspace Overview
 
-Saat Anda membuka menu **API Config** di sidebar Studio, Anda disajikan:
-- **Katalog Rute Aktif**: Daftar seluruh endpoint REST yang dihasilkan secara dinamis untuk setiap tabel (Base & Auth).
-- **Status Aturan Akses**: Indikator warna apakah rute tersebut bersifat `Public`, `Auth Required`, `Admin Only`, atau `Owner Only`.
-- **Ekspor Cepat**: Tombol untuk mengunduh koleksi API sistem penuh atau per-tabel ke format Postman v2.1.
-- **Custom API Manager**: Antarmuka untuk membuat dan mengelola query SQL parameterized kustom.
+Opening the **API Config** menu presents:
+- **Active Routes Catalog**: Live catalog of all REST endpoints generated for every Base and Auth collection.
+- **Access Rule Status**: Color-coded badges indicating if a route is `Public`, `Auth Required`, `Admin Only`, or `Owner Only`.
+- **Quick Export**: 1-click download of the entire system API specification in standard Postman v2.1.0 format.
+- **Custom Dynamic SQL Manager**: Visual interface to design and manage parameterized custom SQL endpoints.
 
 ---
 
 ## 2. 📡 Live Auto-Generated REST Endpoints
 
-Setiap tabel di PadiBase secara otomatis memiliki rute REST standar berkinerja tinggi:
+Every collection automatically exposes standard high-performance REST routes:
 
 ```text
 ┌────────┬───────────────────────────────────┬────────────────────────────────────────┐
-│ Method │ Rute Endpoint                     │ Deskripsi                              │
+│ Method │ Endpoint Route                    │ Description                            │
 ├────────┼───────────────────────────────────┼────────────────────────────────────────┤
-│ GET    │ /api/:table                       │ Daftar terpaginasi (?page=1&perPage=20)│
-│ GET    │ /api/:table/all                   │ Seluruh data tabel tanpa paginasi      │
-│ GET    │ /api/:table/:id                   │ Detail record tunggal berdasarkan ID   │
-│ POST   │ /api/:table                       │ Tambah record baru                     │
-│ PATCH  │ /api/:table/:id                   │ Perbarui data record                   │
-│ DELETE │ /api/:table/:id                   │ Hapus data record                      │
-│ POST   │ /api/:table/batch                 │ Batch Create banyak baris dari JSON    │
-│ DELETE │ /api/:table/batch                 │ Batch Delete baris terpilih            │
-│ POST   │ /api/collections/:auth/login      │ Login Auth Table (Argon2id + JWT)      │
-│ POST   │ /api/collections/:auth/register   │ Registrasi Auth Table                  │
+│ GET    │ /api/:table                       │ Paginated list (?page=1&perPage=20)    │
+│ GET    │ /api/:table/all                   │ Complete table dump without pagination │
+│ GET    │ /api/:table/:id                   │ Single record detail by ID             │
+│ POST   │ /api/:table                       │ Insert a new record                    │
+│ PATCH  │ /api/:table/:id                   │ Partial record update                  │
+│ DELETE │ /api/:table/:id                   │ Delete record                          │
+│ POST   │ /api/:table/batch                 │ Batch Create multiple rows from JSON   │
+│ DELETE │ /api/:table/batch                 │ Batch Delete selected row IDs          │
+│ POST   │ /api/collections/:auth/login      │ Auth Table login (Argon2id + JWT)      │
+│ POST   │ /api/collections/:auth/register   │ Auth Table user self-registration      │
 └────────┴───────────────────────────────────┴────────────────────────────────────────┘
 ```
 
-### Parameter Query yang Didukung:
-- **`?page=1&perPage=30`**: Kontrol paginasi data.
-- **`?sort=-created_at,name`**: Urutkan data (`-` untuk Descending).
-- **`?filter=(status='active' && price > 1000)`**: Filter kondisional ekspresi.
-- **`?fields=id,title,cover_url`**: Meminta kolom tertentu (tetap tunduk pada server-side projection).
+### Supported Query Parameters:
+- **`?page=1&perPage=30`**: Pagination controls.
+- **`?sort=-created_at,name`**: Sorting (`-` indicates Descending).
+- **`?filter=(status='active' && price > 1000)`**: Conditional filter expressions.
+- **`?fields=id,title,cover_url`**: Field projection requesting specific columns.
 
 ---
 
 ## 3. 🛠️ Custom Dynamic SQL Endpoints (`/api/custom/*`)
 
-Ketika aplikasi Anda membutuhkan query analitik kompleks, laporan agregasi multi-tabel, atau logika kustom yang tidak tercover oleh CRUD standar, Anda **tidak perlu memodifikasi kode backend Rust**. Anda dapat membuatnya langsung di menu ini!
+When your application needs complex joins, reporting metrics, or business logic beyond CRUD, **you do not need to write Rust backend code**. Create dynamic endpoints directly from Studio:
 
-### Langkah Membuat Custom SQL Endpoint:
-1. Klik tombol **"+ New Custom API"**.
-2. **Nama Rute**: Tentukan nama identifier unik (misal: `monthly-revenue`). Endpoint akan aktif di `/api/custom/monthly-revenue`.
-3. **HTTP Method**: Pilih `GET`, `POST`, `PUT`, atau `DELETE`.
-4. **Access Rule**: Tentukan siapa yang boleh memanggil endpoint ini (misal: `@request.auth.role = 'admin'`).
-5. **Query SQL dengan Parameter Bindings**:
-   Gunakan placeholder `:nama_parameter` untuk parameter dinamis yang aman dari SQL Injection:
+### Creating a Custom SQL Endpoint:
+1. Click **"+ New Custom API"**.
+2. **Route Name**: Enter an identifier (e.g., `monthly-revenue`). The route will be live at `/api/custom/monthly-revenue`.
+3. **HTTP Method**: Choose `GET`, `POST`, `PUT`, or `DELETE`.
+4. **Access Rule**: Specify who can call it (e.g., `@request.auth.role = 'admin'`).
+5. **Parameterized SQL Query**:
+   Use `:param_name` placeholders to prevent SQL injection:
    ```sql
    SELECT 
      DATE_TRUNC('month', created_at) AS order_month,
@@ -77,16 +77,16 @@ Ketika aplikasi Anda membutuhkan query analitik kompleks, laporan agregasi multi
    ORDER BY order_month DESC
    LIMIT :limit;
    ```
-6. Klik **"Save Endpoint"**.
+6. Click **"Save Endpoint"**.
 
-### Cara Pemanggilan dari Klien:
-Kirimkan parameter query string untuk method `GET` atau JSON body untuk method `POST`:
+### Invoking the Custom Endpoint:
+Pass query parameters for `GET` or JSON body for `POST`:
 ```bash
 curl -X GET "http://127.0.0.1:8085/api/custom/monthly-revenue?start_date=2026-01-01&limit=12" \
   -H "Authorization: Bearer <ADMIN_JWT_TOKEN>"
 ```
 
-PadiBase mengeksekusi query melalui **SQLx Prepared Statement** dan mengembalikan hasilnya dalam bentuk JSON native murni:
+PadiBase executes the query via an **SQLx Prepared Statement** and outputs clean native JSON:
 ```json
 {
   "status": 200,
@@ -106,43 +106,43 @@ PadiBase mengeksekusi query melalui **SQLx Prepared Statement** dan mengembalika
 
 ## 4. ⏰ Background Cron Tasks & Scheduled SQL
 
-PadiBase menyediakan **Cron Task Scheduler** bawaan di dalam binary Rust:
-- Anda dapat menjadwalkan query SQL tertentu untuk dieksekusi secara otomatis di latar belakang (misalnya: membersihkan token kedaluwarsa setiap tengah malam, mengarsipkan order lama, atau menghitung ulang statistik berkala).
-- Mendukung sintaks cron 5-segmen standar (`* * * * *` untuk menit, jam, hari dalam bulan, bulan, hari dalam minggu).
-- Contoh: `0 2 * * *` (Jalankan setiap pukul 02:00 pagi).
+PadiBase includes a built-in **Cron Scheduler** inside the binary:
+- Schedule specific SQL queries to run automatically in the background (e.g., purging expired tokens, archiving old records, calculating daily totals).
+- Uses standard 5-part cron syntax (`* * * * *` for minute, hour, day of month, month, day of week).
+- Example: `0 2 * * *` runs daily at 2:00 AM.
 
 ---
 
-## 5. 📑 1-Klik Postman Collection v2.1.0 Exporter
+## 5. 📑 1-Click Postman Collection v2.1.0 Exporter
 
-PadiBase Studio dapat mengompilasi seluruh spesifikasi API menjadi file standar **Postman Collection v2.1.0 JSON**.
+Export your entire backend API into standard **Postman Collection v2.1.0 JSON** files.
 
-### A. Ekspor Langsung dari Dashboard Studio UI
-- Klik tombol **"Export Postman Collection"** pada menu API Config atau di header tabel.
-- File JSON siap pakai akan langsung diunduh ke browser Anda.
+### A. Export from Studio UI
+- Click **"Export Postman Collection"** in the API Config workspace or any table header.
+- The JSON file downloads directly in your browser.
 
-### B. Ekspor via Terminal / CLI
+### B. Export via Binary CLI
 ```bash
-# Ekspor seluruh sistem dan seluruh koleksi tabel ke direktori ./api_collection
-cargo run -- api-collection --force
+# Export full system and all collections to ./api_collection:
+./padibase api-collection --force
 
-# Ekspor koleksi tabel tertentu saja (misal: posts)
-cargo run -- api-collection --collection posts --force
+# Export a single collection only:
+./padibase api-collection --collection posts --force
 
-# Kustomisasi base URL dan output folder:
-cargo run -- api-collection --output ./my_postman --base-url "http://127.0.0.1:8085"
+# Customize output directory and base URL:
+./padibase api-collection --output ./my_postman --base-url "http://127.0.0.1:8085"
 ```
 
-File yang dihasilkan mencakup:
-1. `padi_base_api_collection.json`: Master koleksi lengkap mencakup Gateway Admin, Autentikasi Pengguna, Operasi Koleksi, Batch Actions, dan Realtime SSE.
-2. `<table_name>_collection.json`: Koleksi modular per-tabel yang ringkas.
+Generated files:
+1. `padi_base_api_collection.json`: Complete master collection covering Admin Gateway, Auth, Collections, Batch Operations, and Realtime SSE.
+2. `<table_name>_collection.json`: Modular per-table collection.
 
 ---
 
-## 6. 🚀 Panduan Impor ke Postman, Insomnia & Bruno
+## 6. 🚀 Importing into Postman, Insomnia & Bruno
 
-1. **Buka Aplikasi API Client** pilihan Anda (Postman / Insomnia / Bruno / Thunder Client).
-2. Pilih opsi **Import** -> Pilih file JSON hasil ekspor PadiBase.
-3. Seluruh folder, endpoint, query parameters, dan contoh payload request akan langsung terisi rapi!
-4. **Auto-Save JWT Token**:
-   Ketika Anda menjalankan request login (`auth-with-password`), Postman test script bawaan yang disertakan oleh PadiBase akan otomatis menyimpan token JWT ke variabel koleksi `{{token}}` sehingga seluruh request terproteksi lainnya dapat langsung dijalankan tanpa perlu copy-paste token manual!
+1. Open your API client (**Postman**, **Insomnia**, **Bruno**, or **Thunder Client**).
+2. Select **Import** -> Choose the exported JSON file.
+3. All folders, endpoints, query parameters, and payload schemas load automatically!
+4. **Auto-Saved JWT Tokens**:
+   Executing the login request (`auth-with-password`) automatically stores the returned JWT token into the collection variable `{{token}}`, authenticating all subsequent requests without copy-pasting.
