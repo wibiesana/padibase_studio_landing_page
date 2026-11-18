@@ -8,15 +8,16 @@ The **Tables / Collections** workspace is the core engine of **PadiBase Studio**
 
 1. [🏗️ Collections & Tables Architecture](#1-collections--tables-architecture)
 2. [👥 Deep Dive: Base Table vs. Auth Table](#2-deep-dive-base-table-vs-auth-table)
-3. [📝 Schema Fields & Data Types](#3-schema-fields--data-types)
-4. [📁 Decoupled File Storage Architecture (Crucial)](#4-decoupled-file-storage-architecture-crucial)
-5. [🔗 Smart Relations, Foreign Keys & Zero N+1 Engine](#5-smart-relations-foreign-keys--zero-n1-engine)
-6. [🛡️ Endpoint Security: Access Rules & Granular RBAC](#6-endpoint-security-access-rules--granular-rbac)
-7. [👁️ Server-Side Field Projections (Column Privacy)](#7-server-side-field-projections-column-privacy)
-8. [📊 Studio Record Management](#8-studio-record-management)
-9. [⚡ Batch Operations: Batch Create & Batch Delete](#9-batch-operations-batch-create--batch-delete)
-10. [🔄 1-Click Database Schema Sync](#10-1-click-database-schema-sync)
-11. [💻 Usage via PadiBase JS SDK](#11-usage-via-padibase-js-sdk)
+3. [🔑 Primary Key Architecture: VARCHAR(255) vs. Auto-Increment INT](#3-primary-key-architecture-varchar255-vs-auto-increment-int)
+4. [📝 Schema Fields & Data Types](#4-schema-fields--data-types)
+5. [📁 Decoupled File Storage Architecture (Crucial)](#5-decoupled-file-storage-architecture-crucial)
+6. [🔗 Smart Relations, Foreign Keys & Zero N+1 Engine](#6-smart-relations-foreign-keys--zero-n1-engine)
+7. [🛡️ Endpoint Security: Access Rules & Granular RBAC](#7-endpoint-security-access-rules--granular-rbac)
+8. [👁️ Server-Side Field Projections (Column Privacy)](#8-server-side-field-projections-column-privacy)
+9. [📊 Studio Record Management](#9-studio-record-management)
+10. [⚡ Batch Operations: Batch Create & Batch Delete](#10-batch-operations-batch-create--batch-delete)
+11. [🔄 1-Click Database Schema Sync](#11-1-click-database-schema-sync)
+12. [💻 Usage via PadiBase JS SDK](#12-usage-via-padibase-js-sdk)
 
 ---
 
@@ -91,7 +92,35 @@ Use this for accounts that authenticate with credentials (e.g., `users`, `member
 
 ---
 
-## 3. 📝 Schema Fields & Data Types
+## 3. 🔑 Primary Key Architecture: VARCHAR(255) vs. Auto-Increment INT
+
+### 1. What Type is Used?
+
+#### For Newly Created Tables in PadiBase:
+- **Physical SQL Type**: `VARCHAR(255) PRIMARY KEY NOT NULL`
+- **Value Format**: A 15-character collision-resistant random string (generated from UUID v4, e.g., `a1b2c3d4e5f6g7h`), similar to PocketBase / modern BaaS architectures.
+
+#### For Existing MariaDB / MySQL / Postgres Tables (Synced):
+- If your database table already uses `INT AUTO_INCREMENT` or `BIGINT AUTO_INCREMENT` (such as `#5`, `#511` as seen in your table records), PadiBase's introspector automatically respects and preserves your existing auto-increment integer primary keys without forced data migrations.
+
+---
+
+### 2. Why VARCHAR(255) for New Tables?
+
+| Reason | Explanation |
+| :--- | :--- |
+| **Universal Multi-DB Portability** | Auto-increment syntax differs across databases (`AUTO_INCREMENT` in MariaDB/MySQL, `AUTOINCREMENT` in SQLite, `SERIAL` or `IDENTITY` in PostgreSQL). `VARCHAR(255) PRIMARY KEY` is 100% portable across all 4 database engines without migration friction. |
+| **Security & Anti-Enumeration** | Sequential integers (`1, 2, 3...`) allow attackers to easily scrape data or guess valid IDs (IDOR vulnerabilities) and expose business metrics (e.g., total customer count, daily order volume). Random string IDs prevent enumeration. |
+| **Distributed & Offline Generation** | Identifiers can be safely generated on the client, microservices, or background worker nodes before hitting the database without requiring an atomic table lock or round-trip `AUTO_INCREMENT` sequence counter. |
+| **Zero Migration Conflicts** | When syncing, merging, or backing up/restoring data across staging, development, and production environments, string IDs avoid ID collision and sequence re-indexing issues. |
+
+> [!NOTE]
+> **Using Strict Integer Auto-Increment:**  
+> If you require strict integer `AUTO_INCREMENT` primary keys for specific tables, you can create the table directly in MariaDB / MySQL / PostgreSQL with `id INT AUTO_INCREMENT PRIMARY KEY` and click **"Sync from Database"** in PadiBase Studio—the engine will automatically adapt to it.
+
+---
+
+## 4. 📝 Schema Fields & Data Types
 
 PadiBase Studio supports 8 field types mapped natively to physical SQL types:
 
@@ -108,7 +137,7 @@ PadiBase Studio supports 8 field types mapped natively to physical SQL types:
 
 ---
 
-## 4. 📁 Decoupled File Storage Architecture (Crucial)
+## 5. 📁 Decoupled File Storage Architecture (Crucial)
 
 > [!IMPORTANT]
 > **PADIBASE DOES NOT PROVIDE A `FILE` COLUMN TYPE IN TABLE SCHEMAS.**
@@ -144,7 +173,7 @@ In the PadiBase Studio record creation/edit drawer:
 
 ---
 
-## 5. 🔗 Smart Relations, Foreign Keys & Zero N+1 Engine
+## 6. 🔗 Smart Relations, Foreign Keys & Zero N+1 Engine
 
 Connecting collections is straightforward without manual SQL `ALTER TABLE` statements:
 
@@ -169,7 +198,7 @@ In traditional APIs, fetching 50 posts requires 1 query for the posts plus 50 qu
 
 ---
 
-## 6. 🛡️ Endpoint Security: Access Rules & Granular RBAC
+## 7. 🛡️ Endpoint Security: Access Rules & Granular RBAC
 
 Table security is managed per-action in the **API Endpoints & Access Rules** modal:
 
@@ -209,7 +238,7 @@ You can safely keep `list_rule = "public"` so visitors can browse paginated post
 
 ---
 
-## 7. 👁️ Server-Side Field Projections (Column Privacy)
+## 8. 👁️ Server-Side Field Projections (Column Privacy)
 
 In the **Projected Fields** tab:
 - Choose which columns clients are allowed to receive on read endpoints (`list`, `all`, `view`).
@@ -218,7 +247,7 @@ In the **Projected Fields** tab:
 
 ---
 
-## 8. 📊 Studio Record Management
+## 9. 📊 Studio Record Management
 
 1. **Spreadsheet Table View**: Clean tabular presentation with data type tags (PK, FK, TEXT, NUMBER, JSON).
 2. **Realtime Search & Sorting**: Instant search bar and clickable column headers for Ascending/Descending ordering.
@@ -228,7 +257,7 @@ In the **Projected Fields** tab:
 
 ---
 
-## 9. ⚡ Batch Operations: Batch Create & Batch Delete
+## 10. ⚡ Batch Operations: Batch Create & Batch Delete
 
 ### A. Batch Create (`POST /api/:table/batch`)
 Send an array of dozens or hundreds of records in a single request:
@@ -260,7 +289,7 @@ curl -X DELETE http://127.0.0.1:8085/api/products/batch \
 
 ---
 
-## 10. 🔄 1-Click Database Schema Sync
+## 11. 🔄 1-Click Database Schema Sync
 
 When making external database modifications (e.g., via pgAdmin, DBeaver, or command line):
 - Click **"Sync DB Schema"** in the Studio table toolbar.
@@ -268,7 +297,7 @@ When making external database modifications (e.g., via pgAdmin, DBeaver, or comm
 
 ---
 
-## 11. 💻 Usage via PadiBase JS SDK
+## 12. 💻 Usage via PadiBase JS SDK
 
 ```javascript
 import PadiBase from 'padibase';
