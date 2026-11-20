@@ -9,15 +9,25 @@
 ```javascript
 import { padi } from '@/lib/padi';
 
-// Subscribe to all record mutations (create, update, delete) in 'posts'
+// 1. Subscribe to all live changes in 'posts'
 const unsubscribe = padi.table('posts').subscribe('*', (e) => {
   console.log('Action:', e.action); // "create" | "update" | "delete"
-  console.log('Table:', e.table);   // "posts"
+  console.log('Table :', e.table);  // "posts"
   console.log('Record:', e.record); // Full record payload
 });
+unsubscribe(); // Cleanup when done
 
-// Unsubscribe when done
-unsubscribe();
+// 2. Subscribe to a single specific record by ID
+const unsubSingle = padi.table('posts').subscribe('rec_01h8xyz', (e) => {
+  console.log('Specific record changed:', e.action, e.record);
+});
+unsubSingle(); // Cleanup single record listener
+
+// 3. Subscribe by action ('create' | 'update' | 'delete')
+const unsubNew = padi.table('posts').subscribe('create', (e) => {
+  console.log('New post added:', e.record);
+});
+unsubNew();
 ```
 
 ---
